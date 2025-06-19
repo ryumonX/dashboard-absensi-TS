@@ -1,39 +1,106 @@
-'use client'
+'use client';
 import * as React from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import API from '@/lib/axioClient'
+
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { DownloadIcon } from '@phosphor-icons/react/dist/ssr/Download';
 import { PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
 import { UploadIcon } from '@phosphor-icons/react/dist/ssr/Upload';
-import dayjs from 'dayjs';
+
 import QRScannerHtml5 from '@/components/dashboard/attendances/QRscanner';
-import { config } from '@/config';
 import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { AttendancesFilters } from '@/components/dashboard/attendances/attendance-filters';
 import { AttendancesTable } from '@/components/dashboard/attendances/attendance-table';
-import type { Attendance } from '@/components/dashboard/attendances/attendance-table';
+import { AttendanceEditModal } from '@/components/dashboard/attendances/edit-modal';
 
-const attendances: Attendance[] = [
-  
-];
+export interface Attendance {
+  id: number;
+  name: string;
+  email: string;
+  avatar?: string;
+  className: string;
+  date: string | Date 
+  time: string;
+  method: string;
+  status: string;
+  user: {
+    name: string;
+    email: string;
+  };
+}
 
 export default function Page(): React.JSX.Element {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scanResult, setScanResult] = useState<string | null>(null);
   const [resultModalOpen, setResultModalOpen] = useState(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [attendances, setAttendances] = useState<Attendance[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const page = 0;
-  const rowsPerPage = 5;
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedAttendance, setSelectedAttendance] = useState<Attendance | null>(null);
+
+  const fetchAttendances = async () => {
+    setLoading(true);
+    try {
+      const res = await API.get('/attendances');
+      setAttendances(res.data);
+    } catch (err) {
+      console.error('Failed to fetch attendances:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAttendances();
+  }, []);
+
+  const handleQRScan = async (data: string) => {
+    try {
+      const res = await API.post('/attendances/scan', { qrcode: data });
+      setScanResult(`✅ Berhasil: ${res.data.message || 'Data ditambahkan.'}`);
+      fetchAttendances();
+    } catch (err: any) {
+      console.error(err);
+      setScanResult(`❌ Gagal: ${err.response?.data?.message || 'Terjadi kesalahan.'}`);
+    } finally {
+      setScannerOpen(false);
+      setResultModalOpen(true);
+    }
+  };
+
+  const handleEdit = async (id: number, updatedData: Partial<Attendance>) => {
+    try {
+      await API.put(`/attendances/${id}`, updatedData);
+      fetchAttendances();
+    } catch (err) {
+      console.error('Gagal edit:', err);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await API.delete(`/attendances/${id}`);
+      fetchAttendances();
+    } catch (err) {
+      console.error('Gagal hapus:', err);
+    }
+  };
+
+  const openEditModal = (id: number) => {
+    const found = attendances.find((a) => a.id === id);
+    if (found) {
+      setSelectedAttendance(found);
+      setEditModalOpen(true);
+    }
+  };
 
   const paginatedAttendances = applyPagination(attendances, page, rowsPerPage);
-
-  const handleQRScan = (data: string) => {
-    setScanResult(data);
-    setScannerOpen(false);
-    setResultModalOpen(true);
-  };
 
   return (
     <Stack spacing={3}>
@@ -65,12 +132,21 @@ export default function Page(): React.JSX.Element {
       </Stack>
 
       <AttendancesFilters />
+
       <AttendancesTable
         count={attendances.length}
         page={page}
-        rows={paginatedAttendances}
         rowsPerPage={rowsPerPage}
+        rows={paginatedAttendances}
+        onPageChange={(newPage) => setPage(newPage)}
+        onRowsPerPageChange={(newRowsPerPage) => {
+          setRowsPerPage(newRowsPerPage);
+          setPage(0);
+        }}
+        onEdit={(id) => openEditModal(id)}
+        onDelete={(id) => handleDelete(id)}
       />
+
       <QRScannerHtml5
         open={scannerOpen}
         onClose={() => setScannerOpen(false)}
@@ -88,6 +164,18 @@ export default function Page(): React.JSX.Element {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <AttendanceEditModal
+        open={editModalOpen}
+        data={selectedAttendance}
+        onClose={() => setEditModalOpen(false)}
+        onSave={async (updatedData) => {
+          if (selectedAttendance) {
+            await handleEdit(selectedAttendance.id, updatedData as any);
+            setEditModalOpen(false);
+          }
+        }}
+      />
     </Stack>
   );
 }
