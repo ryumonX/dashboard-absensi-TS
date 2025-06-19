@@ -1,5 +1,6 @@
+'use client'
 import * as React from 'react';
-import type { Metadata } from 'next';
+import { useState } from 'react';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -7,66 +8,32 @@ import { DownloadIcon } from '@phosphor-icons/react/dist/ssr/Download';
 import { PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
 import { UploadIcon } from '@phosphor-icons/react/dist/ssr/Upload';
 import dayjs from 'dayjs';
-
+import QRScannerHtml5 from '@/components/dashboard/attendances/QRscanner';
 import { config } from '@/config';
+import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { AttendancesFilters } from '@/components/dashboard/attendances/attendance-filters';
 import { AttendancesTable } from '@/components/dashboard/attendances/attendance-table';
 import type { Attendance } from '@/components/dashboard/attendances/attendance-table';
 
-export const metadata = { title: `attendance | Dashboard | ${config.site.name}` } satisfies Metadata;
-
-const attendances = [
-  {
-    id: 1,
-    name: 'Alcides Antonio',
-    avatar: '/assets/avatar-10.png',
-    email: 'alcides.antonio@devias.io',
-    className: 'Kelas A',
-    date: dayjs().toDate(),
-    time: dayjs().toDate(),
-    method: 'Offline',
-    status: 'Hadir',
-  },
-  {
-    id: 2,
-    name: 'Marcus Finn',
-    avatar: '/assets/avatar-9.png',
-    email: 'marcus.finn@devias.io',
-    className: 'Kelas B',
-    date: dayjs().toDate(),
-    time: dayjs().add(1, 'hour').toDate(),
-    method: 'Online',
-    status: 'Izin',
-  },
-  {
-    id: 3,
-    name: 'Jie Yan',
-    avatar: '/assets/avatar-8.png',
-    email: 'jie.yan.song@devias.io',
-    className: 'Kelas C',
-    date: dayjs().toDate(),
-    time: dayjs().add(2, 'hour').toDate(),
-    method: 'Offline',
-    status: 'Sakit',
-  },
-  {
-    id: 4,
-    name: 'Nasimiyu Danai',
-    avatar: '/assets/avatar-7.png',
-    email: 'nasimiyu.danai@devias.io',
-    className: 'Kelas A',
-    date: dayjs().toDate(),
-    time: dayjs().add(3, 'hour').toDate(),
-    method: 'Online',
-    status: 'Hadir',
-  },
-] satisfies Attendance[];
+const attendances: Attendance[] = [
+  
+];
 
 export default function Page(): React.JSX.Element {
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scanResult, setScanResult] = useState<string | null>(null);
+  const [resultModalOpen, setResultModalOpen] = useState(false);
+
   const page = 0;
   const rowsPerPage = 5;
 
-  const paginatedattendances = applyPagination(attendances, page, rowsPerPage);
+  const paginatedAttendances = applyPagination(attendances, page, rowsPerPage);
+
+  const handleQRScan = (data: string) => {
+    setScanResult(data);
+    setScannerOpen(false);
+    setResultModalOpen(true);
+  };
 
   return (
     <Stack spacing={3}>
@@ -83,24 +50,44 @@ export default function Page(): React.JSX.Element {
           </Stack>
         </Stack>
 
-
         <Stack direction="row" spacing={2}>
           <Button startIcon={<PlusIcon fontSize="var(--icon-fontSize-md)" />} variant="contained">
             Add
           </Button>
-          <Button startIcon={<PlusIcon fontSize="var(--icon-fontSize-md)" />} variant="contained">
+          <Button
+            startIcon={<PlusIcon fontSize="var(--icon-fontSize-md)" />}
+            variant="contained"
+            onClick={() => setScannerOpen(true)}
+          >
             SCAN QR
           </Button>
         </Stack>
-
       </Stack>
+
       <AttendancesFilters />
       <AttendancesTable
-        count={paginatedattendances.length}
+        count={attendances.length}
         page={page}
-        rows={paginatedattendances}
+        rows={paginatedAttendances}
         rowsPerPage={rowsPerPage}
       />
+      <QRScannerHtml5
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onScanSuccess={handleQRScan}
+      />
+
+      <Dialog open={resultModalOpen} onClose={() => setResultModalOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Hasil Scan QR</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1">{scanResult}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setResultModalOpen(false)} variant="contained" autoFocus>
+            Tutup
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   );
 }
