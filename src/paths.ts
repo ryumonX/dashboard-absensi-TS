@@ -4,9 +4,13 @@ export const paths = {
   dashboard: {
     overview: '/dashboard',
     account: '/dashboard/account',
+    student: '/dashboard/students',
+    absensi: '/dashboard/attendances',
+    grade: '/dashboard/grades',
     customers: '/dashboard/customers',
     integrations: '/dashboard/integrations',
     settings: '/dashboard/settings',
   },
   errors: { notFound: '/errors/not-found' },
 } as const;
+

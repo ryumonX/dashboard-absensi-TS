@@ -5,11 +5,15 @@ import { PlugsConnectedIcon } from '@phosphor-icons/react/dist/ssr/PlugsConnecte
 import { UserIcon } from '@phosphor-icons/react/dist/ssr/User';
 import { UsersIcon } from '@phosphor-icons/react/dist/ssr/Users';
 import { XSquare } from '@phosphor-icons/react/dist/ssr/XSquare';
+import { CalendarCheckIcon } from '@phosphor-icons/react';
+import { GraduationCapIcon } from '@phosphor-icons/react';
 
 export const navIcons = {
   'chart-pie': ChartPieIcon,
   'gear-six': GearSixIcon,
   'plugs-connected': PlugsConnectedIcon,
+  'calendar-check': CalendarCheckIcon,
+  'graduation-cap': GraduationCapIcon,
   'x-square': XSquare,
   user: UserIcon,
   users: UsersIcon,

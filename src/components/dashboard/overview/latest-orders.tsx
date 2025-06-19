@@ -36,11 +36,11 @@ export interface LatestOrdersProps {
 
 export function LatestOrders({ orders = [], sx }: LatestOrdersProps): React.JSX.Element {
   return (
-    <Card sx={sx}>
+       <Card sx={{ width: '100%' }}>
       <CardHeader title="Latest orders" />
       <Divider />
-      <Box sx={{ overflowX: 'auto' }}>
-        <Table sx={{ minWidth: 800 }}>
+      <Box>
+        <Table sx={{ minWidth: 1000 }}>
           <TableHead>
             <TableRow>
               <TableCell>Order</TableCell>
