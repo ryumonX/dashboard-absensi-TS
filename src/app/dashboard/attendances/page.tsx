@@ -1,7 +1,7 @@
 'use client';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import API from '@/lib/axioClient'
+import API from '@/lib/axioClient';
 
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
@@ -9,9 +9,15 @@ import Typography from '@mui/material/Typography';
 import { DownloadIcon } from '@phosphor-icons/react/dist/ssr/Download';
 import { PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
 import { UploadIcon } from '@phosphor-icons/react/dist/ssr/Upload';
+import * as XLSX from 'xlsx';
 
 import QRScannerHtml5 from '@/components/dashboard/attendances/QRscanner';
-import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from '@mui/material';
 import { AttendancesFilters } from '@/components/dashboard/attendances/attendance-filters';
 import { AttendancesTable } from '@/components/dashboard/attendances/attendance-table';
 import { AttendanceAddModal } from '@/components/dashboard/attendances/add-modal';
@@ -23,7 +29,7 @@ export interface Attendance {
   email: string;
   avatar?: string;
   className: string;
-  date: string | Date
+  date: string | Date;
   time: string;
   method: string;
   status: string;
@@ -49,7 +55,7 @@ export default function Page(): React.JSX.Element {
   const fetchAttendances = async () => {
     setLoading(true);
     try {
-      const res = await API.get('/attendances/today');
+      const res = await API.get('/attendances');
       setAttendances(res.data);
     } catch (err) {
       console.error('Failed to fetch attendances:', err);
@@ -102,6 +108,43 @@ export default function Page(): React.JSX.Element {
     }
   };
 
+  const handleExportAll = () => {
+    const data = attendances.map(formatAttendance);
+    exportToSpreadsheet(data, 'all_attendance.xlsx');
+  };
+
+  const handleExportToday = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const data = attendances
+      .filter((a) => a.date.toString().startsWith(today))
+      .map(formatAttendance);
+    exportToSpreadsheet(data, `attendance_today_${today}.xlsx`);
+  };
+
+  const handleExportByStatus = (status: string) => {
+    const data = attendances
+      .filter((a) => a.status === status)
+      .map(formatAttendance);
+    exportToSpreadsheet(data, `attendance_${status}.xlsx`);
+  };
+
+  const formatAttendance = (a: Attendance) => ({
+    Name: a.user?.name || a.name,
+    Email: a.user?.email || a.email,
+    Class: a.className,
+    Date: new Date(a.date).toLocaleDateString(),
+    Time: new Date(a.time).toLocaleTimeString(),
+    Method: a.method,
+    Status: a.status,
+  });
+
+  const exportToSpreadsheet = (data: any[], fileName: string) => {
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Attendances');
+    XLSX.writeFile(workbook, fileName);
+  };
+
   const paginatedAttendances = applyPagination(attendances, page, rowsPerPage);
 
   return (
@@ -110,11 +153,14 @@ export default function Page(): React.JSX.Element {
         <Stack spacing={1} sx={{ flex: '1 1 auto' }}>
           <Typography variant="h4">STUDENT ATTENDANCE</Typography>
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-            <Button color="inherit" startIcon={<UploadIcon fontSize="var(--icon-fontSize-md)" />}>
-              Import
+            <Button onClick={handleExportAll} color="inherit" startIcon={<DownloadIcon />}>
+              Export All
             </Button>
-            <Button color="inherit" startIcon={<DownloadIcon fontSize="var(--icon-fontSize-md)" />}>
-              Export
+            <Button onClick={handleExportToday} color="inherit" startIcon={<DownloadIcon />}>
+              Export Today
+            </Button>
+            <Button onClick={() => handleExportByStatus('present')} color="inherit" startIcon={<DownloadIcon />}>
+              Export Present
             </Button>
           </Stack>
         </Stack>
@@ -127,7 +173,6 @@ export default function Page(): React.JSX.Element {
           >
             Add
           </Button>
-
           <Button
             startIcon={<PlusIcon fontSize="var(--icon-fontSize-md)" />}
             variant="contained"
@@ -184,7 +229,6 @@ export default function Page(): React.JSX.Element {
           }
         }}
       />
-
 
       <AttendanceEditModal
         open={editModalOpen}
