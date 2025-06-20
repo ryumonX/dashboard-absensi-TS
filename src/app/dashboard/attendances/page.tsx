@@ -51,22 +51,32 @@ export default function Page(): React.JSX.Element {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [selectedAttendance, setSelectedAttendance] = useState<Attendance | null>(null);
+  const [totalRows, setTotalRows] = useState(0); // Tambahkan ini
 
-  const fetchAttendances = async () => {
-    setLoading(true);
-    try {
-      const res = await API.get('/attendances');
-      setAttendances(res.data);
-    } catch (err) {
-      console.error('Failed to fetch attendances:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+
+  const fetchAttendances = async (page: number = 1, limit: number = 5) => {
+  setLoading(true);
+  try {
+    const res = await API.get('/attendances', {
+      params: {
+        page,
+        limit,
+      },
+    });
+
+    setAttendances(res.data.data);
+    setTotalRows(res.data.meta.total); // ambil total dari backend
+  } catch (err) {
+    console.error('Failed to fetch attendances:', err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
-    fetchAttendances();
-  }, []);
+  fetchAttendances(page + 1, rowsPerPage); 
+}, [page, rowsPerPage]);
+
 
   const handleQRScan = async (data: string) => {
     try {
