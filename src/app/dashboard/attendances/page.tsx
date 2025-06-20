@@ -14,6 +14,7 @@ import QRScannerHtml5 from '@/components/dashboard/attendances/QRscanner';
 import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { AttendancesFilters } from '@/components/dashboard/attendances/attendance-filters';
 import { AttendancesTable } from '@/components/dashboard/attendances/attendance-table';
+import { AttendanceAddModal } from '@/components/dashboard/attendances/add-modal';
 import { AttendanceEditModal } from '@/components/dashboard/attendances/edit-modal';
 
 export interface Attendance {
@@ -22,7 +23,7 @@ export interface Attendance {
   email: string;
   avatar?: string;
   className: string;
-  date: string | Date 
+  date: string | Date
   time: string;
   method: string;
   status: string;
@@ -42,12 +43,13 @@ export default function Page(): React.JSX.Element {
   const [loading, setLoading] = useState<boolean>(false);
 
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [addModalOpen, setAddModalOpen] = useState(false);
   const [selectedAttendance, setSelectedAttendance] = useState<Attendance | null>(null);
 
   const fetchAttendances = async () => {
     setLoading(true);
     try {
-      const res = await API.get('/attendances');
+      const res = await API.get('/attendances/today');
       setAttendances(res.data);
     } catch (err) {
       console.error('Failed to fetch attendances:', err);
@@ -118,9 +120,14 @@ export default function Page(): React.JSX.Element {
         </Stack>
 
         <Stack direction="row" spacing={2}>
-          <Button startIcon={<PlusIcon fontSize="var(--icon-fontSize-md)" />} variant="contained">
+          <Button
+            startIcon={<PlusIcon fontSize="var(--icon-fontSize-md)" />}
+            variant="contained"
+            onClick={() => setAddModalOpen(true)}
+          >
             Add
           </Button>
+
           <Button
             startIcon={<PlusIcon fontSize="var(--icon-fontSize-md)" />}
             variant="contained"
@@ -164,6 +171,20 @@ export default function Page(): React.JSX.Element {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <AttendanceAddModal
+        open={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        onSave={async (data) => {
+          try {
+            await API.post('/attendances', data);
+            fetchAttendances();
+          } catch (err) {
+            console.error('Gagal tambah data:', err);
+          }
+        }}
+      />
+
 
       <AttendanceEditModal
         open={editModalOpen}
