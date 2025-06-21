@@ -2,43 +2,49 @@
 import * as React from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Button, MenuItem, CircularProgress, Box, Paper, Typography, Divider, Grid
+  TextField, Button, MenuItem, CircularProgress, Box,
+  Paper, Typography, Divider
 } from '@mui/material';
 import API from '@/lib/axioClient';
 
 interface GradeAddModalProps {
   open: boolean;
   onClose: () => void;
+  studentId: number;
   onSave: (data: any[]) => void;
 }
 
-export const GradeAddModal: React.FC<GradeAddModalProps> = ({ open, onClose, onSave }) => {
+type Teacher = {
+  id: number;
+  userId: number;
+  user: { name: string };
+};
+
+export const GradeAddModal: React.FC<GradeAddModalProps> = ({
+  open, onClose, onSave, studentId
+}) => {
   const [form, setForm] = React.useState({
-    userId: '',
-    teacherId: '',
+    teacher: null as Teacher | null,
     semester: '',
     remarks: {} as Record<number, string>,
     scores: {} as Record<number, string>
   });
 
   const [subjects, setSubjects] = React.useState<{ id: number; name: string }[]>([]);
-  const [students, setStudents] = React.useState<{ id: number; name: string }[]>([]);
-  const [teachers, setTeachers] = React.useState<{ id: number; name: string }[]>([]);
+  const [teachers, setTeachers] = React.useState<Teacher[]>([]);
   const [loading, setLoading] = React.useState(true);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [subjectRes, userRes] = await Promise.all([
+      const [subjectRes, teacherRes] = await Promise.all([
         API.get('/subjects'),
-        API.get('/user')
+        API.get('/teachers')
       ]);
-      const subjectData = subjectRes.data;
-      const userData = userRes.data;
 
-      setSubjects(subjectData);
-      setStudents(userData.filter((u: any) => u.role === 'student'));
-      setTeachers(userData.filter((u: any) => u.role === 'teacher'));
+      console.log('Fetched teachers:', teacherRes.data);
+      setSubjects(subjectRes.data);
+      setTeachers(teacherRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -73,9 +79,9 @@ export const GradeAddModal: React.FC<GradeAddModalProps> = ({ open, onClose, onS
     const gradeData = subjects
       .filter(subject => form.scores[subject.id])
       .map(subject => ({
-        userId: Number(form.userId),
+        userId: studentId,
         subjectId: subject.id,
-        teacherId: Number(form.teacherId),
+        teacherId: form.teacher?.id ?? 0,
         semester: form.semester,
         score: Number(form.scores[subject.id]),
         remarks: form.remarks[subject.id] || null
@@ -90,39 +96,31 @@ export const GradeAddModal: React.FC<GradeAddModalProps> = ({ open, onClose, onS
       <DialogTitle>Add Bulk Grades</DialogTitle>
       <DialogContent sx={{ pt: 2 }}>
         {loading ? (
-          <CircularProgress />
+          <Box display="flex" justifyContent="center" py={4}>
+            <CircularProgress />
+          </Box>
         ) : (
           <>
             <TextField
               select
               fullWidth
               margin="normal"
-              name="userId"
-              label="Student"
-              value={form.userId}
-              onChange={handleChange}
-            >
-              {students.map((student) => (
-                <MenuItem key={student.id} value={student.id}>
-                  {student.name}
-                </MenuItem>
-              ))}
-            </TextField>
-
-            <TextField
-              select
-              fullWidth
-              margin="normal"
-              name="teacherId"
               label="Teacher"
-              value={form.teacherId}
-              onChange={handleChange}
+              value={form.teacher ? form.teacher.id : ''}
+              onChange={(e) => {
+                const selected = teachers.find(t => t.id === Number(e.target.value));
+                setForm((prev) => ({ ...prev, teacher: selected ?? null }));
+              }}
             >
-              {teachers.map((teacher) => (
-                <MenuItem key={teacher.id} value={teacher.id}>
-                  {teacher.name}
-                </MenuItem>
-              ))}
+              {teachers.length === 0 ? (
+                <MenuItem disabled>No teachers found</MenuItem>
+              ) : (
+                teachers.map((teacher) => (
+                  <MenuItem key={teacher.id} value={teacher.id}>
+                    {teacher.user?.name || 'Unknown'}
+                  </MenuItem>
+                ))
+              )}
             </TextField>
 
             <TextField

@@ -2,11 +2,15 @@
 import * as React from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Button, Typography, Box, IconButton,
-  Table, TableHead, TableRow, TableCell, TableBody, TablePagination, Divider, Avatar, Stack
+  Typography, Box, IconButton, Button,
+  Table, TableHead, TableRow, TableCell, TableBody,
+  Avatar, Stack
 } from '@mui/material';
 import { PenIcon, TrashIcon } from '@phosphor-icons/react';
 
+import API from '@/lib/axioClient';
+import { GradeAddModal } from './add-modal';
+import { GradeEditModal } from './edit-modal';
 
 interface Grade {
   id: number;
@@ -32,81 +36,146 @@ interface Grade {
 interface GradeModalProps {
   open: boolean;
   onClose: () => void;
-  student: { name: string; email: string };
-  grades: Grade[];
-  onAdd: () => void;
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
+  student: { id: number; name: string; email: string };
+  onAdd: (data: any) => Promise<void>;
+  onEdit: (id: number, data: any) => Promise<void>;
+  onDelete: (id: number) => Promise<void>;
 }
 
-export const GradeModal: React.FC<GradeModalProps> = ({ open, onClose, student, grades, onAdd, onEdit, onDelete }) => {
+export const GradeModal: React.FC<GradeModalProps> = ({
+  open,
+  onClose,
+  student,
+  onAdd,
+  onEdit,
+  onDelete
+}) => {
+  const [grades, setGrades] = React.useState<Grade[]>([]);
+  const [addOpen, setAddOpen] = React.useState(false);
+  const [editOpen, setEditOpen] = React.useState(false);
+  const [selectedGrade, setSelectedGrade] = React.useState<Grade | null>(null);
+
+  const fetchGrades = async () => {
+    try {
+      const res = await API.get(`/grades/user/${student.id}`);
+      setGrades(res.data.data);
+    } catch (err) {
+      console.error('Gagal fetch grades:', err);
+    }
+  };
+
+  React.useEffect(() => {
+    if (open) fetchGrades();
+  }, [open]);
+
+  const handleDelete = async (id: number) => {
+    await onDelete(id);
+    fetchGrades();
+  };
+
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="lg">
-      <DialogTitle>Detail Nilai Siswa</DialogTitle>
-      <DialogContent>
-        <Box mb={3}>
-          <Typography variant="subtitle1"><strong>Nama:</strong> {student.name}</Typography>
-          <Typography variant="subtitle1"><strong>Email:</strong> {student.email}</Typography>
-        </Box>
+    <>
+      <Dialog open={open} onClose={onClose} fullWidth maxWidth="lg">
+        <DialogTitle>Detail Nilai Siswa</DialogTitle>
+        <DialogContent>
+          <Box mb={3}>
+            <Typography variant="subtitle1"><strong>Nama:</strong> {student.name}</Typography>
+            <Typography variant="subtitle1"><strong>Email:</strong> {student.email}</Typography>
+          </Box>
 
-        <Box display="flex" justifyContent="flex-end" mb={2}>
-          <Button variant="contained" color="primary" onClick={onAdd}>Tambah Nilai</Button>
-        </Box>
+          <Box display="flex" justifyContent="flex-end" mb={2}>
+            <Button variant="contained" color="primary" onClick={() => setAddOpen(true)}>
+              Tambah Nilai
+            </Button>
+          </Box>
 
-        <Box sx={{ overflowX: 'auto' }}>
-          <Table sx={{ minWidth: '1000px' }}>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Nama Siswa</TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell>Mata Pelajaran</TableCell>
-                <TableCell>Guru</TableCell>
-                <TableCell>Semester</TableCell>
-                <TableCell>Nilai</TableCell>
-                <TableCell>Catatan</TableCell>
-                <TableCell align="center">Aksi</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {grades.map((row) => (
-                <TableRow hover key={row.id}>
-                  <TableCell>{row.id}</TableCell>
-                  <TableCell>
-                    <Stack direction="row" spacing={2} alignItems="center">
-                      <Avatar src={row.user.avatar || undefined} />
-                      <Typography variant="subtitle2">{row.user.name}</Typography>
-                    </Stack>
-                  </TableCell>
-                  <TableCell>{row.user.email}</TableCell>
-                  <TableCell>{row.subject.name}</TableCell>
-                  <TableCell>{row.teacher.name}</TableCell>
-                  <TableCell>{row.semester}</TableCell>
-                  <TableCell>{row.score.toFixed(2)}</TableCell>
-                  <TableCell>
-                    {row.remarks ? (
-                      <Typography noWrap title={row.remarks}>{row.remarks}</Typography>
-                    ) : (
-                      '-'
-                    )}
-                  </TableCell>
-                  <TableCell align="center">
-                    <IconButton color="primary" onClick={() => onEdit(row.id)}>
-                      <PenIcon />
-                    </IconButton>
-                    <IconButton color="error" onClick={() => onDelete(row.id)}>
-                      <TrashIcon />
-                    </IconButton>
-                  </TableCell>
+          <Box sx={{ overflowX: 'auto' }}>
+            <Table sx={{ minWidth: '1000px' }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell>ID</TableCell>
+                  <TableCell>Nama</TableCell>
+                  <TableCell>Email</TableCell>
+                  <TableCell>Mata Pelajaran</TableCell>
+                  <TableCell>Guru</TableCell>
+                  <TableCell>Semester</TableCell>
+                  <TableCell>Nilai</TableCell>
+                  <TableCell>Catatan</TableCell>
+                  <TableCell align="center">Aksi</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Box>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Tutup</Button>
-      </DialogActions>
-    </Dialog>
+              </TableHead>
+              <TableBody>
+                {grades.map((row) => (
+                  <TableRow hover key={row.id}>
+                    <TableCell>{row.id}</TableCell>
+                    <TableCell>
+                      <Stack direction="row" spacing={2} alignItems="center">
+                        <Avatar src={row.user.avatar || undefined} />
+                        <Typography variant="subtitle2">{row.user.name}</Typography>
+                      </Stack>
+                    </TableCell>
+                    <TableCell>{row.user.email}</TableCell>
+                    <TableCell>{row.subject.name}</TableCell>
+                    <TableCell>{row.teacher.name}</TableCell>
+                    <TableCell>{row.semester}</TableCell>
+                    <TableCell>{row.score.toFixed(2)}</TableCell>
+                    <TableCell>{row.remarks || '-'}</TableCell>
+                    <TableCell align="center">
+                      <IconButton
+                        color="primary"
+                        onClick={() => {
+                          setSelectedGrade(row);
+                          setEditOpen(true);
+                        }}
+                      >
+                        <PenIcon />
+                      </IconButton>
+                      <IconButton
+                        color="error"
+                        onClick={() => handleDelete(row.id)}
+                      >
+                        <TrashIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onClose}>Tutup</Button>
+        </DialogActions>
+      </Dialog>
+
+  <GradeAddModal
+  open={addOpen}
+  onClose={() => setAddOpen(false)}
+  onSave={async (data) => {
+    await onAdd(data); 
+    setAddOpen(false);
+    fetchGrades();
+  }}
+  studentId={student.id}
+/>
+
+
+      <GradeEditModal
+        open={editOpen}
+        data={selectedGrade}
+        onClose={() => {
+          setEditOpen(false);
+          setSelectedGrade(null);
+        }}
+        onSave={async (data) => {
+          if (selectedGrade) {
+            await onEdit(selectedGrade.id, data);
+            setEditOpen(false);
+            setSelectedGrade(null);
+            fetchGrades();
+          }
+        }}
+      />
+    </>
   );
 };
