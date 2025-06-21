@@ -1,28 +1,26 @@
 'use client';
 
 import * as React from 'react';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import Checkbox from '@mui/material/Checkbox';
-import Divider from '@mui/material/Divider';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableHead from '@mui/material/TableHead';
-import TablePagination from '@mui/material/TablePagination';
-import TableRow from '@mui/material/TableRow';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import Stack from '@mui/material/Stack';
-import Avatar from '@mui/material/Avatar';
+import {
+  Box,
+  Card,
+  Checkbox,
+  Divider,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TablePagination,
+  TableRow,
+  Typography,
+  IconButton,
+  Stack,
+  Avatar,
+  Button,
+} from '@mui/material';
 import { PenIcon, TrashIcon } from '@phosphor-icons/react';
 import { useSelection } from '@/hooks/use-selection';
 
-function noop(): void {
-  // do nothing
-}
-
-// Tipe data baru sesuai skema Grade
 export interface Grade {
   id: number;
   user: {
@@ -49,17 +47,23 @@ interface GradesTableProps {
   page?: number;
   rows?: Grade[];
   rowsPerPage?: number;
+  onPageChange?: (newPage: number) => void;
+  onRowsPerPageChange?: (newRowsPerPage: number) => void;
   onEdit?: (id: number) => void;
   onDelete?: (id: number) => void;
+  onViewStudent?: (student: { id: number; name: string; email: string }) => void;
 }
 
 export function GradesTable({
   count = 0,
   rows = [],
   page = 0,
-  rowsPerPage = 0,
+  rowsPerPage = 5,
+  onPageChange = () => {},
+  onRowsPerPageChange = () => {},
   onEdit,
   onDelete,
+  onViewStudent
 }: GradesTableProps): React.JSX.Element {
   const rowIds = React.useMemo(() => rows.map((g) => g.id.toString()), [rows]);
   const { selectAll, deselectAll, selectOne, deselectOne, selected } = useSelection(rowIds);
@@ -80,6 +84,7 @@ export function GradesTable({
                   onChange={(e) => (e.target.checked ? selectAll() : deselectAll())}
                 />
               </TableCell>
+              <TableCell>ID</TableCell>
               <TableCell>Nama Siswa</TableCell>
               <TableCell>Email</TableCell>
               <TableCell>Mata Pelajaran</TableCell>
@@ -98,9 +103,14 @@ export function GradesTable({
                   <TableCell padding="checkbox">
                     <Checkbox
                       checked={isSelected}
-                      onChange={(e) => (e.target.checked ? selectOne(row.id.toString()) : deselectOne(row.id.toString()))}
+                      onChange={(e) =>
+                        e.target.checked
+                          ? selectOne(row.id.toString())
+                          : deselectOne(row.id.toString())
+                      }
                     />
                   </TableCell>
+                  <TableCell>{row.id}</TableCell>
                   <TableCell>
                     <Stack direction="row" spacing={2} alignItems="center">
                       <Avatar src={row.user.avatar || undefined} />
@@ -111,15 +121,39 @@ export function GradesTable({
                   <TableCell>{row.subject.name}</TableCell>
                   <TableCell>{row.teacher.name}</TableCell>
                   <TableCell>{row.semester}</TableCell>
-                  <TableCell>{row.score}</TableCell>
-                  <TableCell>{row.remarks || '-'}</TableCell>
+                  <TableCell>{row.score.toFixed(2)}</TableCell>
+                  <TableCell>
+                    {row.remarks ? (
+                      <Typography noWrap title={row.remarks}>
+                        {row.remarks}
+                      </Typography>
+                    ) : (
+                      '-'
+                    )}
+                  </TableCell>
                   <TableCell align="center">
-                    <IconButton color="primary" onClick={() => onEdit?.(row.id)}>
-                      <PenIcon />
-                    </IconButton>
-                    <IconButton color="error" onClick={() => onDelete?.(row.id)}>
-                      <TrashIcon />
-                    </IconButton>
+                    <Stack direction="row" spacing={1} justifyContent="center">
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        color="info"
+                        onClick={() =>
+                          onViewStudent?.({
+                            id: row.user.id,
+                            name: row.user.name,
+                            email: row.user.email,
+                          })
+                        }
+                      >
+                        Lihat Nilai
+                      </Button>
+                      <IconButton color="primary" onClick={() => onEdit?.(row.id)} title="Edit Nilai">
+                        <PenIcon />
+                      </IconButton>
+                      <IconButton color="error" onClick={() => onDelete?.(row.id)} title="Hapus Nilai">
+                        <TrashIcon />
+                      </IconButton>
+                    </Stack>
                   </TableCell>
                 </TableRow>
               );
@@ -131,11 +165,11 @@ export function GradesTable({
       <TablePagination
         component="div"
         count={count}
-        onPageChange={noop}
-        onRowsPerPageChange={noop}
         page={page}
         rowsPerPage={rowsPerPage}
         rowsPerPageOptions={[5, 10, 25]}
+        onPageChange={(event, newPage) => onPageChange(newPage)}
+        onRowsPerPageChange={(event) => onRowsPerPageChange(parseInt(event.target.value, 10))}
       />
     </Card>
   );

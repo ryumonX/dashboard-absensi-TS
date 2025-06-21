@@ -74,7 +74,7 @@ export default function Page(): React.JSX.Element {
 };
 
   useEffect(() => {
-  fetchAttendances(page + 1, rowsPerPage); 
+  fetchAttendances(page + 1, rowsPerPage);
 }, [page, rowsPerPage]);
 
 
