@@ -17,9 +17,9 @@ export interface Grade {
     id: number;
     name: string;
   };
-  teacher: {
+   teacher: {
     id: number;
-    name: string;
+    user: { id: number; name: string };
   };
   semester: string;
   score: number;

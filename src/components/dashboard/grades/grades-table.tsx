@@ -15,7 +15,6 @@ import {
   Typography,
   IconButton,
   Stack,
-  Avatar,
   Button,
 } from '@mui/material';
 import { PenIcon, TrashIcon } from '@phosphor-icons/react';
@@ -23,12 +22,8 @@ import { useSelection } from '@/hooks/use-selection';
 
 export interface Grade {
   id: number;
-  user: {
-    id: number;
-    name: string;
-    email: string;
-    avatar?: string;
-  };
+  name: string;
+  email: string;
   subject: {
     id: number;
     name: string;
@@ -37,9 +32,7 @@ export interface Grade {
     id: number;
     name: string;
   };
-  semester: string;
-  score: number;
-  remarks?: string | null;
+
 }
 
 interface GradesTableProps {
@@ -59,8 +52,8 @@ export function GradesTable({
   rows = [],
   page = 0,
   rowsPerPage = 5,
-  onPageChange = () => {},
-  onRowsPerPageChange = () => {},
+  onPageChange = () => { },
+  onRowsPerPageChange = () => { },
   onEdit,
   onDelete,
   onViewStudent
@@ -87,11 +80,6 @@ export function GradesTable({
               <TableCell>ID</TableCell>
               <TableCell>Nama Siswa</TableCell>
               <TableCell>Email</TableCell>
-              <TableCell>Mata Pelajaran</TableCell>
-              <TableCell>Guru</TableCell>
-              <TableCell>Semester</TableCell>
-              <TableCell>Nilai</TableCell>
-              <TableCell>Catatan</TableCell>
               <TableCell align="center">Aksi</TableCell>
             </TableRow>
           </TableHead>
@@ -113,46 +101,44 @@ export function GradesTable({
                   <TableCell>{row.id}</TableCell>
                   <TableCell>
                     <Stack direction="row" spacing={2} alignItems="center">
-                      <Avatar src={row.user.avatar || undefined} />
-                      <Typography variant="subtitle2">{row.user.name}</Typography>
+                      <Typography variant="subtitle2">{row.name}</Typography>
                     </Stack>
                   </TableCell>
-                  <TableCell>{row.user.email}</TableCell>
-                  <TableCell>{row.subject.name}</TableCell>
-                  <TableCell>{row.teacher.name}</TableCell>
-                  <TableCell>{row.semester}</TableCell>
-                  <TableCell>{row.score.toFixed(2)}</TableCell>
-                  <TableCell>
-                    {row.remarks ? (
-                      <Typography noWrap title={row.remarks}>
-                        {row.remarks}
-                      </Typography>
-                    ) : (
-                      '-'
-                    )}
-                  </TableCell>
+                  <TableCell>{row.email}</TableCell>
                   <TableCell align="center">
                     <Stack direction="row" spacing={1} justifyContent="center">
                       <Button
                         size="small"
-                        variant="outlined"
-                        color="info"
+                        variant="contained"
+                        color="primary"
+                        startIcon={<PenIcon size={18} />}
+                        sx={{
+                          textTransform: 'none',
+                          fontWeight: 500,
+                          borderRadius: 2,
+                          boxShadow: 'none',
+                          px: 2,
+                          py: 0.5,
+                          '&:hover': {
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                          },
+                        }}
                         onClick={() =>
                           onViewStudent?.({
-                            id: row.user.id,
-                            name: row.user.name,
-                            email: row.user.email,
+                            id: row.id,
+                            name: row.name,
+                            email: row.email,
                           })
                         }
                       >
-                        Lihat Nilai
+                        View Grades
                       </Button>
-                      <IconButton color="primary" onClick={() => onEdit?.(row.id)} title="Edit Nilai">
+                      {/* <IconButton color="primary" onClick={() => onEdit?.(row.id)} title="Edit Nilai">
                         <PenIcon />
                       </IconButton>
                       <IconButton color="error" onClick={() => onDelete?.(row.id)} title="Hapus Nilai">
                         <TrashIcon />
-                      </IconButton>
+                      </IconButton> */}
                     </Stack>
                   </TableCell>
                 </TableRow>
