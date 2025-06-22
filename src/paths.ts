@@ -7,6 +7,8 @@ export const paths = {
     student: '/dashboard/students',
     absensi: '/dashboard/attendances',
     grade: '/dashboard/grades',
+    subject: '/dashboard/subjects',
+
     customers: '/dashboard/customers',
     integrations: '/dashboard/integrations',
     settings: '/dashboard/settings',

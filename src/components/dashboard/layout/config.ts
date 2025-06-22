@@ -13,6 +13,9 @@ export const navItems = [
   // Menu Grade
   { key: 'grade', title: 'Grade', href: paths.dashboard.grade, icon: 'graduation-cap' },
 
+  { key: 'subject', title: 'Subject', href: paths.dashboard.subject, icon: 'graduation-cap' },
+
+
   // Menu lainnya
   { key: 'integrations', title: 'Integrations', href: paths.dashboard.integrations, icon: 'plugs-connected' },
   { key: 'settings', title: 'Settings', href: paths.dashboard.settings, icon: 'gear-six' },
