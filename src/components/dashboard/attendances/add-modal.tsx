@@ -51,12 +51,16 @@ export function AttendanceAddModal({
   });
 
   useEffect(() => {
-    if (open) {
-      API.get('/user')
-        .then((res) => setUsers(res.data))
-        .catch((err) => console.error('Gagal ambil users:', err));
-    }
-  }, [open]);
+  if (open) {
+    API.get('/user')
+      .then((res) => {
+        const rawData = Array.isArray(res.data) ? res.data : res.data.data || [];
+        const studentList = rawData.filter((user: any) => user.role === 'student');
+        setUsers(studentList);
+      })
+      .catch((err) => console.error('Gagal ambil users:', err));
+  }
+}, [open]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

@@ -43,7 +43,7 @@ export const GradeAddModal: React.FC<GradeAddModalProps> = ({
       ]);
 
       console.log('Fetched teachers:', teacherRes.data);
-      setSubjects(subjectRes.data);
+      setSubjects(subjectRes.data?.data || []);
       setTeachers(teacherRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
