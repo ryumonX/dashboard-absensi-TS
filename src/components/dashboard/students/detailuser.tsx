@@ -196,7 +196,7 @@ export default function StudentDetailModal({
                     : 'N/A'}
                 </Typography>
                 <Typography variant="body2">
-                  <strong>Since:</strong> 6/2025
+                  <strong>Join date:</strong> 6/2025
                 </Typography>
               </Stack>
             </Stack>
