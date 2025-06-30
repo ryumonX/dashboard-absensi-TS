@@ -1,6 +1,9 @@
 'use client';
 
 import * as React from 'react';
+import { useEffect, useState } from 'react';
+import API from '@/lib/axioClient';
+
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
@@ -16,29 +19,62 @@ import type { ApexOptions } from 'apexcharts';
 import { Chart } from '@/components/core/chart';
 
 export interface SalesProps {
-  chartSeries: { name: string; data: number[] }[];
   sx?: SxProps;
 }
 
-export function Sales({ chartSeries, sx }: SalesProps): React.JSX.Element {
-  const chartOptions = useChartOptions();
+type DailyData = {
+  day: string;
+  total: number;
+};
+
+export function Sales({ sx }: SalesProps): React.JSX.Element {
+  const [chartSeries, setChartSeries] = useState<{ name: string; data: number[] }[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [total, setTotal] = useState<number>(0);
+
+  const fetchWeeklyData = async () => {
+    try {
+      const response = await API.get('/attendances/total-this-week');
+      const { daily, total } = response.data;
+
+      const labels = daily.map((d: DailyData) => d.day);
+      const data = daily.map((d: DailyData) => d.total);
+
+      setCategories(labels);
+      setChartSeries([
+        {
+          name: 'This Week',
+          data,
+        },
+      ]);
+      setTotal(total);
+    } catch (err) {
+      console.error('Failed to fetch weekly attendance data:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchWeeklyData();
+  }, []);
+
+  const chartOptions = useChartOptions(categories);
 
   return (
     <Card sx={sx}>
       <CardHeader
         action={
-          <Button color="inherit" size="small" startIcon={<ArrowClockwiseIcon fontSize="var(--icon-fontSize-md)" />}>
+          <Button color="inherit" size="small" startIcon={<ArrowClockwiseIcon />} onClick={fetchWeeklyData}>
             Sync
           </Button>
         }
-        title="Sales"
+        title={`Attendance This Week (Total: ${total})`}
       />
       <CardContent>
         <Chart height={350} options={chartOptions} series={chartSeries} type="bar" width="100%" />
       </CardContent>
       <Divider />
       <CardActions sx={{ justifyContent: 'flex-end' }}>
-        <Button color="inherit" endIcon={<ArrowRightIcon fontSize="var(--icon-fontSize-md)" />} size="small">
+        <Button color="inherit" endIcon={<ArrowRightIcon />} size="small">
           Overview
         </Button>
       </CardActions>
@@ -46,7 +82,7 @@ export function Sales({ chartSeries, sx }: SalesProps): React.JSX.Element {
   );
 }
 
-function useChartOptions(): ApexOptions {
+function useChartOptions(categories: string[]): ApexOptions {
   const theme = useTheme();
 
   return {
@@ -65,14 +101,14 @@ function useChartOptions(): ApexOptions {
     stroke: { colors: ['transparent'], show: true, width: 2 },
     theme: { mode: theme.palette.mode },
     xaxis: {
+      categories,
       axisBorder: { color: theme.palette.divider, show: true },
       axisTicks: { color: theme.palette.divider, show: true },
-      categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
       labels: { offsetY: 5, style: { colors: theme.palette.text.secondary } },
     },
     yaxis: {
       labels: {
-        formatter: (value) => (value > 0 ? `${value}K` : `${value}`),
+        formatter: (value) => `${value}`,
         offsetX: -10,
         style: { colors: theme.palette.text.secondary },
       },

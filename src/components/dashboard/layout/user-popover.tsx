@@ -1,3 +1,5 @@
+'use client';
+
 import * as React from 'react';
 import RouterLink from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -24,25 +26,32 @@ export interface UserPopoverProps {
 }
 
 export function UserPopover({ anchorEl, onClose, open }: UserPopoverProps): React.JSX.Element {
-  const { checkSession } = useUser();
-
+  const { user, checkSession } = useUser();
   const router = useRouter();
 
   const handleSignOut = React.useCallback(async (): Promise<void> => {
     try {
+      // 1. Sign out via backend/client logic
       const { error } = await authClient.signOut();
-
       if (error) {
         logger.error('Sign out error', error);
         return;
       }
 
-      // Refresh the auth state
-      await checkSession?.();
+      // 2. Clear client-side storage
+      localStorage.clear(); // or localStorage.removeItem('token') if you use token
+      sessionStorage.clear();
 
-      // UserProvider, for this case, will not refresh the router and we need to do it manually
-      router.refresh();
-      // After refresh, AuthGuard will handle the redirect
+      // 3. Clear cookies (client-side only)
+      document.cookie.split(';').forEach((c) => {
+        document.cookie = c
+          .replace(/^ +/, '')
+          .replace(/=.*/, '=;expires=' + new Date(0).toUTCString() + ';path=/');
+      });
+
+      // 4. Refresh session & router
+      await checkSession?.();
+      router.refresh(); // AuthGuard will redirect automatically
     } catch (error) {
       logger.error('Sign out error', error);
     }
@@ -57,9 +66,9 @@ export function UserPopover({ anchorEl, onClose, open }: UserPopoverProps): Reac
       slotProps={{ paper: { sx: { width: '240px' } } }}
     >
       <Box sx={{ p: '16px 20px ' }}>
-        <Typography variant="subtitle1">Sofia Rivers</Typography>
+        <Typography variant="subtitle1">{user?.name || 'Guest User'}</Typography>
         <Typography color="text.secondary" variant="body2">
-          sofia.rivers@devias.io
+          {user?.email || 'No email'}
         </Typography>
       </Box>
       <Divider />
