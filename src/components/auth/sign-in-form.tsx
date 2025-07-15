@@ -7,23 +7,23 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z as zod } from 'zod';
 import {
   Stack, Typography, FormControl, InputLabel, OutlinedInput,
-  FormHelperText, Button, Alert, Link
+  FormHelperText, Button, Alert, Link, IconButton, Box
 } from '@mui/material';
-import RouterLink from 'next/link';
 import { EyeIcon, EyeSlashIcon } from '@phosphor-icons/react';
 
+import RouterLink from 'next/link';
 import { authClient } from '@/lib/auth/client';
-import { paths } from '@/paths'; // atau ganti '/dashboard' manual
+import { useUser } from '@/hooks/use-user';
 
-// 1. Schema validasi
+// 1. Schema validasi Zod
 const schema = zod.object({
-  email: zod.string().min(1, 'Email wajib diisi').email(),
+  email: zod.string().min(1, 'Email wajib diisi').email('Format email tidak valid'),
   password: zod.string().min(1, 'Password wajib diisi'),
 });
 
 type Values = zod.infer<typeof schema>;
 
-// 2. Default values yang aman
+// 2. Default value untuk form
 const defaultValues: Values = {
   email: '',
   password: '',
@@ -31,6 +31,8 @@ const defaultValues: Values = {
 
 export function SignInForm(): React.JSX.Element {
   const router = useRouter();
+  const { checkSession } = useUser();
+
   const [showPassword, setShowPassword] = React.useState(false);
   const [isPending, setIsPending] = React.useState(false);
 
@@ -56,71 +58,95 @@ export function SignInForm(): React.JSX.Element {
       return;
     }
 
-    router.push(paths.dashboard.overview || '/dashboard');
+    // ⏬ Refresh session context
+    await checkSession();
+
+    // 🔁 Redirect ke dashboard
+    router.push('/dashboard');
   };
 
   return (
     <Stack spacing={4}>
-      <Typography variant="h4">Sign in</Typography>
+      <Typography variant="h4" fontWeight="bold">Sign in</Typography>
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Stack spacing={2}>
-          {/* Email Input */}
+          {/* Email */}
           <Controller
             control={control}
             name="email"
             render={({ field }) => (
-              <FormControl error={Boolean(errors.email)}>
+              <FormControl error={Boolean(errors.email)} fullWidth>
                 <InputLabel>Email address</InputLabel>
                 <OutlinedInput
                   {...field}
-                  value={field.value ?? ''} // ✅ no undefined
+                  value={field.value ?? ''}
                   label="Email address"
                 />
-                {errors.email && <FormHelperText>{errors.email.message}</FormHelperText>}
+                {errors.email && (
+                  <FormHelperText>{errors.email.message}</FormHelperText>
+                )}
               </FormControl>
             )}
           />
 
-          {/* Password Input */}
+          {/* Password */}
           <Controller
             control={control}
             name="password"
             render={({ field }) => (
-              <FormControl error={Boolean(errors.password)}>
+              <FormControl error={Boolean(errors.password)} fullWidth>
                 <InputLabel>Password</InputLabel>
                 <OutlinedInput
                   {...field}
-                  value={field.value ?? ''} // ✅ no undefined
-                  label="Password"
+                  value={field.value ?? ''}
                   type={showPassword ? 'text' : 'password'}
+                  label="Password"
                   endAdornment={
-                    showPassword ? (
-                      <EyeIcon cursor="pointer" onClick={() => setShowPassword(false)} />
-                    ) : (
-                      <EyeSlashIcon cursor="pointer" onClick={() => setShowPassword(true)} />
-                    )
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                    >
+                      {showPassword ? <EyeSlashIcon size={18} /> : <EyeIcon size={18} />}
+                    </IconButton>
                   }
                 />
-                {errors.password && <FormHelperText>{errors.password.message}</FormHelperText>}
+                {errors.password && (
+                  <FormHelperText>{errors.password.message}</FormHelperText>
+                )}
               </FormControl>
             )}
           />
 
-          {/* Forgot password link */}
+          {/* Forgot password */}
           <div>
-            <Link component={RouterLink} href="/auth/reset-password" variant="subtitle2">
-              Forgot password?
+            <Link component={RouterLink} href="/auth/reset-password" variant="body2">
+              Lupa password?
             </Link>
           </div>
 
-          {/* Root error */}
-          {errors.root && <Alert severity="error">{errors.root.message}</Alert>}
+          {/* Root/server error */}
+          {errors.root && (
+            <Alert severity="error">{errors.root.message}</Alert>
+          )}
 
-          {/* Submit button */}
-          <Button disabled={isPending} type="submit" variant="contained">
-            Sign in
+          {/* Submit */}
+          <Button type="submit" variant="contained" disabled={isPending} fullWidth>
+            {isPending ? 'Memproses...' : 'Sign in'}
           </Button>
+
+            <Box
+              bgcolor="grey.100"
+              px={2}
+              py={1.5}
+              mt={2}
+              borderRadius={2}
+              textAlign="center"
+            >
+              <Typography variant="body2" color="text.secondary">
+                Gunakan akun contoh: <strong>dwidelta@example.com</strong> / <strong>dwidelta123</strong>
+              </Typography>
+            </Box>
         </Stack>
       </form>
     </Stack>

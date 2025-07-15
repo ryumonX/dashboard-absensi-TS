@@ -175,18 +175,18 @@ export default function StudentDetailModal({
             {/* Informasi Detail */}
             <Stack direction="row" spacing={3} sx={{ flexWrap: 'wrap' }}>
               <Stack spacing={1} flex={1} minWidth={150}>
-                <Typography variant="body2">
+                <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
                   <strong>Email:</strong> {user.email}
                 </Typography>
-                <Typography variant="body2">
+                <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
                   <strong>Role:</strong> {user.role}
                 </Typography>
-                <Typography variant="body2">
+                <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
                   <strong>Destination:</strong> {user.destinationCountry || 'N/A'}
                 </Typography>
               </Stack>
               <Stack spacing={1} flex={1} minWidth={150}>
-                <Typography variant="body2">
+                <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
                   <strong>Phone:</strong> {user.phoneNumber || 'N/A'}
                 </Typography>
                 <Typography variant="body2">
@@ -199,6 +199,7 @@ export default function StudentDetailModal({
                   <strong>Join date:</strong> 6/2025
                 </Typography>
               </Stack>
+
             </Stack>
 
             <Typography

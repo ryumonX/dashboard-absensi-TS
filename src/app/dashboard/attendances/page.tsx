@@ -28,7 +28,7 @@ export interface Attendance {
   name: string;
   email: string;
   avatar?: string;
-  className: string;
+  class: string;
   date: string | Date;
   time: string;
   method: string;
@@ -141,7 +141,7 @@ export default function Page(): React.JSX.Element {
   const formatAttendance = (a: Attendance) => ({
     Name: a.user?.name || a.name,
     Email: a.user?.email || a.email,
-    Class: a.className,
+    Class: a.class,
     Date: new Date(a.date).toLocaleDateString(),
     Time: new Date(a.time).toLocaleTimeString(),
     Method: a.method,

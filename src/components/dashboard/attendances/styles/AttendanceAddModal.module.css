@@ -1,0 +1,212 @@
+/* style.module.css */
+
+/* ==== Dialog Title ==== */
+.dialogTitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background-color: var(--mui-palette-primary-main);
+  color: white;
+  flex-wrap: wrap;
+}
+
+.closeBtn {
+  color: inherit;
+  padding: 4px;
+}
+
+/* ==== Dialog Content ==== */
+.dialogContent {
+  padding: 0;
+  background-color: var(--mui-palette-background-paper);
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.descriptionBox {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--mui-palette-divider);
+}
+
+.studentList {
+  padding: 16px;
+}
+
+/* ==== Student Row ==== */
+.studentRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  border: 1px solid var(--mui-palette-divider);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  background-color: transparent;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.studentRow:hover {
+  box-shadow: var(--mui-shadows-1);
+  transform: translateY(-2px);
+}
+
+.present {
+  background-color: rgba(76, 175, 80, 0.08);
+}
+
+.absent {
+  background-color: rgba(244, 67, 54, 0.08);
+}
+
+/* ==== Student Info ==== */
+.studentInfo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  background-color: var(--mui-palette-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mui-palette-primary-contrastText);
+}
+
+.email {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+/* ==== Action Buttons ==== */
+.actionButtons {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btnPresentActive {
+  background-color: var(--mui-palette-success-main);
+  color: white;
+}
+
+.btnAbsentActive {
+  background-color: var(--mui-palette-error-main);
+  color: white;
+}
+
+.btnInactive {
+  background-color: var(--mui-palette-action-hover);
+  color: var(--mui-palette-text-secondary);
+}
+
+.btnPresentActive:hover {
+  background-color: var(--mui-palette-success-dark);
+}
+
+.btnAbsentActive:hover {
+  background-color: var(--mui-palette-error-dark);
+}
+
+.btnInactive:hover {
+  background-color: var(--mui-palette-action-selected);
+}
+
+/* ==== Dialog Actions ==== */
+.dialogActions {
+  padding: 24px;
+  background-color: var(--mui-palette-background-default);
+  border-top: 1px solid var(--mui-palette-divider);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.cancelBtn,
+.saveBtn {
+  text-transform: none;
+  font-weight: 600;
+  padding: 8px 24px;
+  border-radius: 8px;
+}
+
+.saveBtn {
+  box-shadow: var(--mui-shadows-2);
+}
+
+.saveBtn:hover {
+  box-shadow: var(--mui-shadows-4);
+  transform: translateY(-2px);
+}
+
+.saveBtn:disabled {
+  background-color: var(--mui-palette-action-disabledBackground);
+  color: var(--mui-palette-text-disabled);
+}
+
+/* ==== Loading / Empty State Centered ==== */
+.centerBox {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  text-align: center;
+  padding: 16px;
+}
+
+/* ==== Responsive === */
+@media (max-width: 768px) {
+  .studentRow {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px;
+  }
+
+  .studentInfo {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .actionButtons {
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: 12px;
+  }
+
+  .dialogTitle {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px 16px;
+  }
+
+  .descriptionBox {
+    padding: 12px 16px;
+  }
+
+  .studentList {
+    padding: 12px;
+  }
+
+  .dialogActions {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px;
+  }
+
+  .cancelBtn,
+  .saveBtn {
+    width: 100%;
+  }
+}

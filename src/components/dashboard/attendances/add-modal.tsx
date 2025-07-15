@@ -1,168 +1,203 @@
 'use client';
 
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  MenuItem,
-  Stack,
+  Dialog, DialogTitle, DialogContent, DialogActions,
+  Button, Typography, Box, IconButton, Tooltip, useTheme, TextField
 } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
+import dayjs from 'dayjs';
 import API from '@/lib/axioClient';
+import {
+  CheckCircle, XCircle, User, Envelope,
+  FloppyDiskBack, X
+} from '@phosphor-icons/react';
+import styles from './styles/AttendanceAddModal.module.css';
 
-interface AddAttendanceModalProps {
+interface AttendanceModalProps {
   open: boolean;
   onClose: () => void;
   onSave: (data: {
     userId: number;
     class: string;
-    method: string;
-    status: string;
-    date: string; // ISO 8601 datetime
-    time: string; // ISO 8601 datetime
+    method: 'manual';
+    status: 'present' | 'absent';
+    date: string;
+    time: string;
   }) => void;
 }
 
-const statusOptions = ['present', 'late', 'sick', 'permission', 'absent'];
-const methodOptions = ['manual', 'scan'];
-
-interface UserOption {
+interface Student {
   id: number;
   name: string;
   email: string;
 }
 
-export function AttendanceAddModal({
-  open,
-  onClose,
-  onSave,
-}: AddAttendanceModalProps) {
-  const [users, setUsers] = useState<UserOption[]>([]);
-  const [form, setForm] = useState({
-    userId: '',
-    class: '',
-    date: '',
-    time: '',
-    method: 'manual',
-    status: 'present',
-  });
+type AttendanceStatus = 'present' | 'absent' | null;
+
+export function AttendanceAddModal({ open, onClose, onSave }: AttendanceModalProps) {
+  const theme = useTheme();
+  const [studentList, setStudentList] = useState<Student[]>([]);
+  const [attendanceMap, setAttendanceMap] = useState<Record<number, AttendanceStatus>>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-  if (open) {
-    API.get('/user')
-      .then((res) => {
-        const rawData = Array.isArray(res.data) ? res.data : res.data.data || [];
-        const studentList = rawData.filter((user: any) => user.role === 'student');
-        setUsers(studentList);
-      })
-      .catch((err) => console.error('Gagal ambil users:', err));
-  }
-}, [open]);
+    if (!open) return;
+    const fetchStudents = async () => {
+      setIsLoading(true);
+      try {
+        const res = await API.get('/user');
+        const data = Array.isArray(res.data) ? res.data : res.data.data || [];
+        const filtered = data.filter((user: any) => user.role === 'student');
+        setStudentList(filtered);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+        const initialMap: Record<number, AttendanceStatus> = {};
+        filtered.forEach((student: Student) => {
+          initialMap[student.id] = null;
+        });
+        setAttendanceMap(initialMap);
+      } catch (err) {
+        console.error('Failed to fetch students:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchStudents();
+  }, [open]);
+
+  const toggleAttendance = (id: number, status: 'present' | 'absent') => {
+    setAttendanceMap(prev => ({
+      ...prev,
+      [id]: prev[id] === status ? null : status,
+    }));
   };
 
+  const hasMarked = useMemo(() => Object.values(attendanceMap).some(v => v !== null), [attendanceMap]);
+
+  const filteredStudents = useMemo(() => {
+    if (!searchTerm) return studentList;
+    const lower = searchTerm.toLowerCase();
+    return studentList.filter(student =>
+      student.name.toLowerCase().includes(lower) ||
+      student.email.toLowerCase().includes(lower)
+    );
+  }, [searchTerm, studentList]);
+
   const handleSubmit = () => {
-    if (!form.userId || !form.date || !form.time) return;
-
-    // Gabungkan date + time ke ISO string
-    const isoDatetime = new Date(`${form.date}T${form.time}`).toISOString();
-
-    onSave({
-      userId: parseInt(form.userId),
-      class: form.class,
-      method: form.method,
-      status: form.status,
-      date: isoDatetime,
-      time: isoDatetime,
+    const now = dayjs().toISOString();
+    studentList.forEach(student => {
+      const attendanceStatus = attendanceMap[student.id];
+      if (!attendanceStatus) return;
+      onSave({
+        userId: student.id,
+        class: 'English',
+        method: 'manual',
+        status: attendanceStatus,
+        date: now,
+        time: now,
+      });
     });
-
     onClose();
   };
 
+  const StudentRow = ({ student }: { student: Student }) => {
+    const status = attendanceMap[student.id];
+    const isPresent = status === 'present';
+    const isAbsent = status === 'absent';
+
+    return (
+      <Box className={`${styles.studentRow} ${isPresent ? styles.present : isAbsent ? styles.absent : ''}`}>
+        <Box className={styles.studentInfo}>
+          <Box className={styles.avatar}>
+            <User size={20} weight="fill" />
+          </Box>
+          <Box>
+            <Typography variant="subtitle1" fontWeight={600}>{student.name}</Typography>
+            <Box className={styles.email}>
+              <Envelope size={16} color={theme.palette.text.secondary} />
+              <Typography variant="body2" color="text.secondary">{student.email}</Typography>
+            </Box>
+          </Box>
+        </Box>
+
+        <Box className={styles.actionButtons}>
+          <Tooltip title="Hadir" arrow>
+            <IconButton
+              onClick={() => toggleAttendance(student.id, 'present')}
+              className={isPresent ? styles.btnPresentActive : styles.btnInactive}
+            >
+              <CheckCircle size={24} weight={isPresent ? 'fill' : 'regular'} />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Tidak Hadir" arrow>
+            <IconButton
+              onClick={() => toggleAttendance(student.id, 'absent')}
+              className={isAbsent ? styles.btnAbsentActive : styles.btnInactive}
+            >
+              <XCircle size={24} weight={isAbsent ? 'fill' : 'regular'} />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      </Box>
+    );
+  };
+
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Tambah Kehadiran</DialogTitle>
-      <DialogContent>
-        <Stack spacing={2} mt={1}>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle className={styles.dialogTitle}>
+        <Typography variant="h6" component="div" fontWeight={600}>Tambah Kehadiran Siswa - English</Typography>
+        <IconButton onClick={onClose} className={styles.closeBtn}>
+          <X size={24} />
+        </IconButton>
+      </DialogTitle>
+
+      <DialogContent className={styles.dialogContent}>
+        <Box className={styles.descriptionBox}>
+          <Typography variant="body2" color="text.secondary">
+            Pilih status kehadiran untuk setiap siswa. Centang ikon untuk Hadir atau Tidak Hadir.
+          </Typography>
+        </Box>
+
+        <Box sx={{ mt: 2 }}>
           <TextField
-            select
-            label="Siswa"
-            name="userId"
             fullWidth
-            onChange={handleChange}
-            value={form.userId}
-          >
-            {users.map((user) => (
-              <MenuItem key={user.id} value={user.id}>
-                {user.name} ({user.email})
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            label="Kelas"
-            name="class"
-            fullWidth
-            onChange={handleChange}
-            value={form.class}
+            label="Cari siswa berdasarkan nama atau email"
+            variant="outlined"
+            size="small"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <TextField
-            type="date"
-            label="Tanggal"
-            name="date"
-            fullWidth
-            onChange={handleChange}
-            value={form.date}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            type="time"
-            label="Waktu"
-            name="time"
-            fullWidth
-            onChange={handleChange}
-            value={form.time}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            select
-            label="Metode"
-            name="method"
-            fullWidth
-            onChange={handleChange}
-            value={form.method}
-          >
-            {methodOptions.map((option) => (
-              <MenuItem key={option} value={option}>
-                {option.toUpperCase()}
-              </MenuItem>
+        </Box>
+
+        {isLoading ? (
+          <Box className={styles.centerBox}>
+            <Typography variant="body1" color="text.secondary">Memuat data siswa...</Typography>
+          </Box>
+        ) : filteredStudents.length === 0 ? (
+          <Box className={styles.centerBox}>
+            <Typography variant="body1" color="text.secondary">Tidak ada siswa ditemukan</Typography>
+          </Box>
+        ) : (
+          <Box className={styles.studentList}>
+            {filteredStudents.map((student: Student) => (
+              <StudentRow key={student.id} student={student} />
             ))}
-          </TextField>
-          <TextField
-            select
-            label="Status"
-            name="status"
-            fullWidth
-            onChange={handleChange}
-            value={form.status}
-          >
-            {statusOptions.map((option) => (
-              <MenuItem key={option} value={option}>
-                {option.toUpperCase()}
-              </MenuItem>
-            ))}
-          </TextField>
-        </Stack>
+          </Box>
+        )}
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Batal</Button>
-        <Button onClick={handleSubmit} variant="contained">
-          Simpan
+
+      <DialogActions className={styles.dialogActions}>
+        <Button onClick={onClose} variant="outlined" startIcon={<X size={20} />} className={styles.cancelBtn}>
+          Batal
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          variant="contained"
+          startIcon={<FloppyDiskBack size={20} weight="fill" />}
+          disabled={!hasMarked}
+          className={styles.saveBtn}
+        >
+          Simpan Kehadiran
         </Button>
       </DialogActions>
     </Dialog>

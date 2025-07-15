@@ -27,7 +27,7 @@ export interface Attendance {
   name: string;
   email: string;
   avatar?: string;
-  className: string;
+  class: string;
   date: Date | string;
   time: Date | string;
   method: string;
@@ -103,7 +103,7 @@ export function AttendancesTable({
                 </TableCell>
                 <TableCell>{row.user.name}</TableCell>
                 <TableCell>{row.user.email}</TableCell>
-                <TableCell>{row.className}</TableCell>
+                <TableCell>{row.class}</TableCell>
                 <TableCell>{dayjs(row.date).format('DD MMM YYYY')}</TableCell>
                 <TableCell>{dayjs(row.time).format('HH:mm')}</TableCell>
                 <TableCell>{row.method}</TableCell>

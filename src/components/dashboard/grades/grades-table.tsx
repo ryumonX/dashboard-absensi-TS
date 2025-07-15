@@ -98,7 +98,6 @@ export function GradesTable({
                       }
                     />
                   </TableCell>
-                  <TableCell>{row.id}</TableCell>
                   <TableCell>
                     <Stack direction="row" spacing={2} alignItems="center">
                       <Typography variant="subtitle2">{row.name}</Typography>

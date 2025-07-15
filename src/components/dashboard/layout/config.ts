@@ -15,6 +15,8 @@ export const navItems = [
 
   { key: 'subject', title: 'Subject', href: paths.dashboard.subject, icon: 'graduation-cap' },
 
+  { key: 'user', title: 'user', href: paths.dashboard.user, icon: 'users' },
+
 
   // Menu lainnya
   // { key: 'integrations', title: 'Integrations', href: paths.dashboard.integrations, icon: 'plugs-connected' },

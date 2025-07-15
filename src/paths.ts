@@ -8,6 +8,7 @@ export const paths = {
     absensi: '/dashboard/attendances',
     grade: '/dashboard/grades',
     subject: '/dashboard/subjects',
+    user: '/dashboard/users',
 
     customers: '/dashboard/customers',
     integrations: '/dashboard/integrations',

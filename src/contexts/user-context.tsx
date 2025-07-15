@@ -1,7 +1,4 @@
-// contexts/user-context.tsx
-
 'use client';
-
 import * as React from 'react';
 import type { User } from '@/types/user';
 import { authClient } from '@/lib/auth/client';
