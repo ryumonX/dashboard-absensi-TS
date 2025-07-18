@@ -1,8 +1,9 @@
-'use client';
+"use client";
+import * as React from 'react';
 import { useParams } from 'next/navigation';
 import RaportPage from '@/components/dashboard/students/raport';
 
-export default function Page() {
+export default function Page(): React.JSX.Element {
   const params = useParams();
-  return <RaportPage userId={parseInt(params.id as string)} />;
+  return <RaportPage userId={Number.parseInt(params.id as string, 10)} />;
 }

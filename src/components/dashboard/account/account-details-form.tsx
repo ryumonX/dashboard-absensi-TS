@@ -6,7 +6,7 @@ import {
   Divider, FormControl, InputLabel, MenuItem,
   Select, SelectChangeEvent, Stack, TextField,
 } from '@mui/material';
-import API from '@/lib/axioClient';
+import API from '@/lib/axio-client';
 
 const countries = [
   { value: 'japan', label: 'Japan' },
@@ -85,8 +85,8 @@ export function AccountDetailsForm(): React.JSX.Element {
           : '',
       });
 
-    } catch (err) {
-      console.error('Failed to load user data', err);
+    } catch (error) {
+      console.error('Failed to load user data', error);
     }
   };
 

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import API from '@/lib/axioClient';
+import API from '@/lib/axio-client';
 
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
@@ -48,8 +48,8 @@ export function Sales({ sx }: SalesProps): React.JSX.Element {
         },
       ]);
       setTotal(total);
-    } catch (err) {
-      console.error('Failed to fetch weekly attendance data:', err);
+    } catch (error) {
+      console.error('Failed to fetch weekly attendance data:', error);
     }
   };
 

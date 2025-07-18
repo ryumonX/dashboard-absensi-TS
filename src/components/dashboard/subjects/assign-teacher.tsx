@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -17,7 +17,7 @@ import {
   Typography,
   Box
 } from '@mui/material';
-import API from '@/lib/axioClient';
+import API from '@/lib/axio-client';
 
 interface Teacher {
   id: number;
@@ -42,7 +42,7 @@ export const AssignTeacherModal: React.FC<AssignTeacherModalProps> = ({
   const [assignedIds, setAssignedIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const [teacherRes, subjectRes] = await Promise.all([
@@ -52,18 +52,18 @@ export const AssignTeacherModal: React.FC<AssignTeacherModalProps> = ({
 
       setAllTeachers(teacherRes.data);
       setAssignedIds(subjectRes.data.teachers.map((t: Teacher) => t.id));
-    } catch (err) {
-      console.error('Failed to load assign teacher data:', err);
+    } catch (error) {
+      console.error('Failed to load assign teacher data:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [subjectId]);
 
   useEffect(() => {
     if (open && subjectId) {
       fetchData();
     }
-  }, [open, subjectId]);
+  }, [open, subjectId, fetchData]);
 
   const handleToggle = async (teacherId: number) => {
     try {
@@ -74,8 +74,8 @@ export const AssignTeacherModal: React.FC<AssignTeacherModalProps> = ({
         await API.post(`/subjects/${subjectId}/assign-teacher`, { teacherId });
         setAssignedIds((prev) => [...prev, teacherId]);
       }
-    } catch (err) {
-      console.error('Failed to update assignment:', err);
+    } catch (error) {
+      console.error('Failed to update assignment:', error);
     }
   };
 

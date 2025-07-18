@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { Dialog, DialogTitle, DialogContent, IconButton } from '@mui/material';
 import { Html5Qrcode } from 'html5-qrcode';
 
@@ -14,13 +14,24 @@ export default function QRScannerHtml5({ open, onClose, onScanSuccess }: QRScann
   const qrCodeRegionId = 'html5qr-code-region';
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
 
+  // Memoize callbacks to prevent unnecessary re-renders
+  const handleScanSuccess = useCallback((decodedText: string) => {
+    onScanSuccess(decodedText);
+    onClose();
+  }, [onScanSuccess, onClose]);
+
+  const handleScanError = useCallback((_error: string) => {
+    // Optional: log scanning errors
+    // console.warn('QR scan error:', error);
+  }, []);
+
   useEffect(() => {
-    if (!open || typeof window === 'undefined') return;
+    if (!open || globalThis.window === undefined) return;
 
     const startScanner = async () => {
       try {
-        // 💡 Pastikan element sudah ada di DOM
-        const regionEl = document.getElementById(qrCodeRegionId);
+        // Ensure element exists in DOM
+        const regionEl = document.querySelector(`#${qrCodeRegionId}`);
         if (!regionEl) {
           console.warn('QR element not ready yet. Retrying...');
           return;
@@ -39,45 +50,49 @@ export default function QRScannerHtml5({ open, onClose, onScanSuccess }: QRScann
 
         await html5QrCodeRef.current.start(
           cameraId,
-          { fps: 10, qrbox: { width: 250, height: 250 } },
-          (decodedText) => {
-            onScanSuccess(decodedText);
-            onClose();
-          },
-          (err) => {
-            // optional: log scanning errors
-          }
+          { fps: 30, qrbox: { width: 250, height: 250 } },
+          handleScanSuccess,
+          handleScanError
         );
-      } catch (err) {
-        console.error('Error accessing camera:', err);
+      } catch (error) {
+        console.error('Error accessing camera:', error);
         onClose();
       }
     };
 
-    // 🔄 Tunggu DOM ready dulu
+    // Wait for DOM to be ready
     const delay = setTimeout(() => {
       startScanner();
-    }, 200); // beri delay kecil agar DOM benar-benar siap
+    }, 100); // Reduced delay for better performance
 
     return () => {
       clearTimeout(delay);
       html5QrCodeRef.current
         ?.stop()
         .then(() => html5QrCodeRef.current?.clear())
-        .catch((err) => console.warn('Cleanup error:', err));
+        .catch((error) => console.warn('Cleanup error:', error));
     };
-  }, [open]);
+  }, [open, onClose, handleScanSuccess, handleScanError]);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle>
         Scan QR Code
         <IconButton onClick={onClose} sx={{ position: 'absolute', right: 8, top: 8 }}>
-          X
+          ×
         </IconButton>
       </DialogTitle>
       <DialogContent>
-        <div id={qrCodeRegionId} style={{ width: '100%', aspectRatio: '1/1' }} />
+        <div
+          id={qrCodeRegionId}
+          style={{
+            width: '100%',
+            aspectRatio: '1/1',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

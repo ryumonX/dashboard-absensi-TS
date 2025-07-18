@@ -13,11 +13,10 @@ import {
   TablePagination,
   TableRow,
   Typography,
-  IconButton,
   Stack,
   Button,
 } from '@mui/material';
-import { PenIcon, TrashIcon } from '@phosphor-icons/react';
+import { PenIcon } from '@phosphor-icons/react';
 import { useSelection } from '@/hooks/use-selection';
 
 export interface Grade {
@@ -52,10 +51,8 @@ export function GradesTable({
   rows = [],
   page = 0,
   rowsPerPage = 5,
-  onPageChange = () => { },
-  onRowsPerPageChange = () => { },
-  onEdit,
-  onDelete,
+  onPageChange = () => {},
+  onRowsPerPageChange = () => {},
   onViewStudent
 }: GradesTableProps): React.JSX.Element {
   const rowIds = React.useMemo(() => rows.map((g) => g.id.toString()), [rows]);
@@ -132,12 +129,6 @@ export function GradesTable({
                       >
                         View Grades
                       </Button>
-                      {/* <IconButton color="primary" onClick={() => onEdit?.(row.id)} title="Edit Nilai">
-                        <PenIcon />
-                      </IconButton>
-                      <IconButton color="error" onClick={() => onDelete?.(row.id)} title="Hapus Nilai">
-                        <TrashIcon />
-                      </IconButton> */}
                     </Stack>
                   </TableCell>
                 </TableRow>
@@ -154,7 +145,7 @@ export function GradesTable({
         rowsPerPage={rowsPerPage}
         rowsPerPageOptions={[5, 10, 25]}
         onPageChange={(event, newPage) => onPageChange(newPage)}
-        onRowsPerPageChange={(event) => onRowsPerPageChange(parseInt(event.target.value, 10))}
+        onRowsPerPageChange={(event) => onRowsPerPageChange(Number.parseInt(event.target.value, 10))}
       />
     </Card>
   );

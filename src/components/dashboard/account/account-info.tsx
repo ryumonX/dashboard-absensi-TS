@@ -11,7 +11,7 @@ import {
   Stack,
   Typography
 } from '@mui/material';
-import API from '@/lib/axioClient';
+import API from '@/lib/axio-client';
 
 interface User {
   id: number;
@@ -38,8 +38,8 @@ export function AccountInfo(): React.JSX.Element {
         .then((res) => {
           setUser(res.data);
         })
-        .catch((err) => {
-          console.error('Error fetching user:', err);
+        .catch((error) => {
+          console.error('Error fetching user:', error);
         })
         .finally(() => {
           setLoading(false);

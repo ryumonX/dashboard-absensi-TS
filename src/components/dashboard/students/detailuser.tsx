@@ -13,9 +13,9 @@ import {
   Divider,
 } from '@mui/material';
 import QRCode from 'react-qr-code';
-import API from '@/lib/axioClient';
+import API from '@/lib/axio-client';
 import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import dayjs from 'dayjs';
 
 interface StudentDetailModalProps {
@@ -50,7 +50,7 @@ export default function StudentDetailModal({
     setLoading(true);
     API.get(`/user/${userId}`)
       .then((res) => setUser(res.data))
-      .catch((err) => console.error(err))
+      .catch((error) => console.error(error))
       .finally(() => setLoading(false));
   }, [userId, open]);
 

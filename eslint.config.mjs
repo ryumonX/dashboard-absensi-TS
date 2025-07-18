@@ -59,6 +59,8 @@ export default [
 			"unicorn/no-null": "off",
 			"unicorn/no-nested-ternary": "off",
 			"unicorn/no-array-reduce": "off",
+      "unicorn/prefer-ternary": "off",
+
 		},
 	},
 	pluginReact.configs.flat.recommended,

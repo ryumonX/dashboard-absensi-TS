@@ -2,19 +2,16 @@
 
 import * as React from 'react';
 import {
-  Avatar,
   Box,
   Card,
   Checkbox,
   Divider,
-  Stack,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TablePagination,
   TableRow,
-  Typography,
   IconButton,
   Chip
 } from '@mui/material';
@@ -155,7 +152,7 @@ export function AttendancesTable({
         rowsPerPage={rowsPerPage}
         onPageChange={(_, newPage) => onPageChange?.(newPage)}
         onRowsPerPageChange={(event) =>
-          onRowsPerPageChange?.(parseInt(event.target.value, 10))
+          onRowsPerPageChange?.(Number.parseInt(event.target.value, 10))
         }
         rowsPerPageOptions={[5, 10, 25]}
       />

@@ -2,14 +2,19 @@
 import * as React from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Button, CircularProgress, Box
+  TextField, Button, CircularProgress
 } from '@mui/material';
-import API from '@/lib/axioClient';
+import API from '@/lib/axio-client';
+
+interface SubjectData {
+  id: string;
+  name: string;
+}
 
 interface SubjectAddModalProps {
   open: boolean;
   onClose: () => void;
-  onSave: (data: any) => Promise<void>;
+  onSave: (data: SubjectData) => Promise<void>;
 }
 
 export const SubjectAddModal: React.FC<SubjectAddModalProps> = ({
@@ -32,7 +37,7 @@ export const SubjectAddModal: React.FC<SubjectAddModalProps> = ({
       await onSave(res.data);
       onClose();
       setName('');
-    } catch (err) {
+    } catch {
       setError('Gagal menambahkan mata pelajaran');
     } finally {
       setLoading(false);

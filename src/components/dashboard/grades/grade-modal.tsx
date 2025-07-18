@@ -1,15 +1,15 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Typography, Box, IconButton, Button,
   Table, TableHead, TableRow, TableCell, TableBody,
-  Avatar, Stack, Divider, TablePagination,
+  Avatar, TablePagination,
 } from '@mui/material';
 import { PenIcon, TrashIcon } from '@phosphor-icons/react';
-import API from '@/lib/axioClient';
-import { GradeAddModal } from './add-modal';
-import { GradeEditModal } from './edit-modal';
+import API from '@/lib/axio-client';
+import { GradeAddModal } from '@/components/dashboard/grades/add-modal';
+import { GradeEditModal } from '@/components/dashboard/grades/edit-modal';
 
 interface Grade {
   id: number;
@@ -21,12 +21,20 @@ interface Grade {
   remarks?: string | null;
 }
 
+interface GradeFormData {
+  subjectId: number;
+  teacherId: number;
+  semester: string;
+  score: number;
+  remarks?: string;
+}
+
 interface GradeModalProps {
   open: boolean;
   onClose: () => void;
   student: { id: number; name: string; email: string };
-  onAdd: (data: any) => Promise<void>;
-  onEdit: (id: number, data: any) => Promise<void>;
+  onAdd: (data: GradeFormData) => Promise<void>;
+  onEdit: (id: number, data: GradeFormData) => Promise<void>;
   onDelete: (id: number) => Promise<void>;
 }
 
@@ -42,7 +50,7 @@ export const GradeModal: React.FC<GradeModalProps> = ({
   const [editOpen, setEditOpen] = useState(false);
   const [selectedGrade, setSelectedGrade] = useState<Grade | null>(null);
 
-  const fetchGrades = async () => {
+  const fetchGrades = useCallback(async () => {
     try {
       const res = await API.get(`/grades/user/${student.id}`, {
         params: { page: page + 1, limit }
@@ -52,11 +60,13 @@ export const GradeModal: React.FC<GradeModalProps> = ({
     } catch (error) {
       console.error('Failed to fetch grades:', error);
     }
-  };
+  }, [student.id, page, limit]);
 
   useEffect(() => {
-    if (open) fetchGrades();
-  }, [open, page, limit]);
+    if (open) {
+      fetchGrades();
+    }
+  }, [open, fetchGrades]);
 
   const handleEdit = (grade: Grade) => {
     setSelectedGrade(grade);
@@ -66,6 +76,17 @@ export const GradeModal: React.FC<GradeModalProps> = ({
   const handleDelete = async (id: number) => {
     await onDelete(id);
     fetchGrades();
+  };
+
+  // Helper function to convert Grade to GradeFormData
+  const convertToGradeFormData = (grade: Partial<Grade>): GradeFormData => {
+    return {
+      subjectId: grade.subject?.id || 0,
+      teacherId: grade.teacher?.id || 0,
+      semester: grade.semester || '',
+      score: grade.score || 0,
+      remarks: grade.remarks || undefined,
+    };
   };
 
   return (
@@ -100,7 +121,7 @@ export const GradeModal: React.FC<GradeModalProps> = ({
                 </TableRow>
               </TableHead>
               <TableBody>
-                {grades.length ? grades.map((g) => (
+                {grades.length > 0 ? grades.map((g) => (
                   <TableRow key={g.id}>
                     <TableCell>{g.id}</TableCell>
                     <TableCell>{g.user.name}</TableCell>
@@ -133,7 +154,7 @@ export const GradeModal: React.FC<GradeModalProps> = ({
             rowsPerPage={limit}
             onPageChange={(_, newPage) => setPage(newPage)}
             onRowsPerPageChange={(e) => {
-              setLimit(parseInt(e.target.value, 10));
+              setLimit(Number.parseInt(e.target.value, 10));
               setPage(0);
             }}
             rowsPerPageOptions={[5, 10, 25]}
@@ -149,9 +170,24 @@ export const GradeModal: React.FC<GradeModalProps> = ({
         open={addOpen}
         onClose={() => setAddOpen(false)}
         onSave={async (data) => {
-          await onAdd(data);
-          setAddOpen(false);
-          fetchGrades();
+          try {
+            // Handle both single object and array cases
+            if (Array.isArray(data)) {
+              // If data is an array, process each item
+              for (const item of data) {
+                const gradeFormData = convertToGradeFormData(item);
+                await onAdd(gradeFormData);
+              }
+            } else {
+              // If data is a single object, convert and pass it
+              const gradeFormData = convertToGradeFormData(data);
+              await onAdd(gradeFormData);
+            }
+            setAddOpen(false);
+            fetchGrades();
+          } catch (error) {
+            console.error('Failed to add grade:', error);
+          }
         }}
         studentId={student.id}
       />
@@ -165,10 +201,15 @@ export const GradeModal: React.FC<GradeModalProps> = ({
         }}
         onSave={async (data) => {
           if (!selectedGrade) return;
-          await onEdit(selectedGrade.id, data);
-          setEditOpen(false);
-          setSelectedGrade(null);
-          fetchGrades();
+          try {
+            const gradeFormData = convertToGradeFormData(data);
+            await onEdit(selectedGrade.id, gradeFormData);
+            setEditOpen(false);
+            setSelectedGrade(null);
+            fetchGrades();
+          } catch (error) {
+            console.error('Failed to edit grade:', error);
+          }
         }}
       />
     </>

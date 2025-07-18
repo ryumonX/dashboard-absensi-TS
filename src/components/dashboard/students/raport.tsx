@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import API from '@/lib/axioClient';
+import API from '@/lib/axio-client';
 import {
   Table, TableHead, TableBody, TableRow, TableCell,
   Typography, CircularProgress, Paper, TablePagination,
@@ -9,8 +9,29 @@ import {
 import { useRouter } from 'next/navigation';
 import { DownloadSimple, ArrowLeft } from 'phosphor-react';
 
+// Define interface for grade data
+interface Grade {
+  id: number;
+  subject: {
+    name: string;
+  };
+  teacher?: {
+    user?: {
+      name: string;
+    };
+  };
+  semester: string;
+  score: number;
+  remarks: string;
+}
+
+// Move handlePrint to outer scope
+const handlePrint = () => {
+  globalThis.print();
+};
+
 export default function RaportPage({ userId }: { userId: number }) {
-  const [grades, setGrades] = useState([]);
+  const [grades, setGrades] = useState<Grade[]>([]);
   const [page, setPage] = useState(0);
   const [limit, setLimit] = useState(5);
   const [total, setTotal] = useState(0);
@@ -26,10 +47,6 @@ export default function RaportPage({ userId }: { userId: number }) {
       })
       .finally(() => setLoading(false));
   }, [userId, page, limit]);
-
-  const handlePrint = () => {
-    window.print();
-  };
 
   return (
     <Paper
@@ -132,7 +149,7 @@ export default function RaportPage({ userId }: { userId: number }) {
               </TableHead>
               <TableBody>
                 {grades.length > 0 ? (
-                  grades.map((g: any, index: number) => (
+                  grades.map((g: Grade, index: number) => (
                     <TableRow
                       key={g.id}
                       hover
@@ -180,7 +197,7 @@ export default function RaportPage({ userId }: { userId: number }) {
               rowsPerPage={limit}
               onPageChange={(_, newPage) => setPage(newPage)}
               onRowsPerPageChange={(e) => {
-                setLimit(parseInt(e.target.value));
+                setLimit(Number.parseInt(e.target.value, 10));
                 setPage(0);
               }}
               rowsPerPageOptions={[5, 10, 20]}

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import API from '@/lib/axioClient';
+import API from '@/lib/axio-client';
 
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
@@ -30,17 +30,13 @@ export interface User {
 
 export default function Page(): React.JSX.Element {
   const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [editUser, setEditUser] = useState<User | null>(null);
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
-  const [openDetailModal, setOpenDetailModal] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
   // Ambil semua user dari API, filter selain student
   const fetchUsers = async () => {
-    setLoading(true);
     try {
       const res = await API.get('/user');
       const allUsers = res.data.data;
@@ -48,19 +44,17 @@ export default function Page(): React.JSX.Element {
       setUsers(filtered);
     } catch (error) {
       console.error('Error fetching users:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
+    void fetchUsers();
   }, []);
 
   const handleDelete = async(id: string | number) => {
     try {
       await API.delete(`/user/${id}`);
-      fetchUsers();
+      await fetchUsers();
     } catch (error) {
       console.error('Delete failed:', error);
     }
@@ -69,11 +63,6 @@ export default function Page(): React.JSX.Element {
   const handleEdit = (user: User) => {
     setEditUser(user);
     setOpenModal(true);
-  };
-
-  const handleViewDetail = (id: number) => {
-    setSelectedUserId(id);
-    setOpenDetailModal(true);
   };
 
   const paginatedUsers = users.slice(
@@ -112,12 +101,11 @@ export default function Page(): React.JSX.Element {
         rowsPerPage={rowsPerPage}
         onPageChange={(event, newPage) => setPage(newPage)}
         onRowsPerPageChange={(event) => {
-          setRowsPerPage(parseInt(event.target.value, 10));
+          setRowsPerPage(Number.parseInt(event.target.value, 10));
           setPage(0);
         }}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        // onViewDetail={handleViewDetail}
       />
 
       <UserFormModal
@@ -125,16 +113,11 @@ export default function Page(): React.JSX.Element {
         onClose={() => setOpenModal(false)}
         onSuccess={() => {
           setOpenModal(false);
-          fetchUsers();
+          void fetchUsers();
         }}
         initialData={editUser}
       />
 
-      {/* <UserDetailModal
-        open={openDetailModal}
-        onClose={() => setOpenDetailModal(false)}
-        userId={selectedUserId}
-      /> */}
     </Stack>
   );
 }

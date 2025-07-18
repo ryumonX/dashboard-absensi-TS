@@ -1,3 +1,4 @@
+import * as React from 'react';
 import {
   Box, Card, Table, TableBody, TableCell, TableHead, TablePagination,
   TableRow, Chip, Typography
@@ -21,6 +22,27 @@ interface Props {
   onRowsPerPageChange: (rows: number) => void;
 }
 
+// Move getStatusColor to outer scope
+const getStatusColor = (status: string): 'success' | 'error' | 'warning' | 'info' | 'default' => {
+  switch (status.toLowerCase()) {
+    case 'present': {
+      return 'success';
+    }
+    case 'absent': {
+      return 'error';
+    }
+    case 'late': {
+      return 'warning';
+    }
+    case 'excused': {
+      return 'info';
+    }
+    default: {
+      return 'default';
+    }
+  }
+};
+
 export function AttendanceHistoryTable({
   rows,
   count,
@@ -28,17 +50,7 @@ export function AttendanceHistoryTable({
   rowsPerPage,
   onPageChange,
   onRowsPerPageChange,
-}: Props) {
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'present': return 'success';
-      case 'absent': return 'error';
-      case 'late': return 'warning';
-      case 'excused': return 'info';
-      default: return 'default';
-    }
-  };
-
+}: Props): React.JSX.Element {
   return (
     <Card>
       <Box sx={{ overflowX: 'auto' }}>
@@ -86,7 +98,7 @@ export function AttendanceHistoryTable({
         page={page}
         rowsPerPage={rowsPerPage}
         onPageChange={(_, newPage) => onPageChange(newPage)}
-        onRowsPerPageChange={(e) => onRowsPerPageChange(parseInt(e.target.value))}
+        onRowsPerPageChange={(e) => onRowsPerPageChange(Number.parseInt(e.target.value, 10))}
         rowsPerPageOptions={[5, 10, 25]}
       />
     </Card>

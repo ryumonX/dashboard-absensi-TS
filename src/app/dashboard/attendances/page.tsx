@@ -1,17 +1,16 @@
 'use client';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import API from '@/lib/axioClient';
+import API from '@/lib/axio-client';
 
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { DownloadIcon } from '@phosphor-icons/react/dist/ssr/Download';
 import { PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
-import { UploadIcon } from '@phosphor-icons/react/dist/ssr/Upload';
 import * as XLSX from 'xlsx';
 
-import QRScannerHtml5 from '@/components/dashboard/attendances/QRscanner';
+import QRScannerHtml5 from '@/components/dashboard/attendances/qr-scanner';
 import {
   Dialog,
   DialogTitle,
@@ -39,6 +38,42 @@ export interface Attendance {
   };
 }
 
+interface ExportedAttendance {
+  Name: string;
+  Email: string;
+  Class: string;
+  Date: string;
+  Time: string;
+  Method: string;
+  Status: string;
+}
+
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+}
+
+// Move exportToSpreadsheet to outer scope
+const exportToSpreadsheet = (data: ExportedAttendance[], fileName: string): void => {
+  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Attendances');
+  XLSX.writeFile(workbook, fileName);
+};
+
+const formatAttendance = (a: Attendance): ExportedAttendance => ({
+  Name: a.user?.name || a.name,
+  Email: a.user?.email || a.email,
+  Class: a.class,
+  Date: new Date(a.date).toLocaleDateString(),
+  Time: new Date(a.time).toLocaleTimeString(),
+  Method: a.method,
+  Status: a.status,
+});
+
 export default function Page(): React.JSX.Element {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scanResult, setScanResult] = useState<string | null>(null);
@@ -46,71 +81,64 @@ export default function Page(): React.JSX.Element {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [attendances, setAttendances] = useState<Attendance[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
 
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [selectedAttendance, setSelectedAttendance] = useState<Attendance | null>(null);
-  const [totalRows, setTotalRows] = useState(0); // Tambahkan ini
 
+  const fetchAttendances = async (page: number = 1, limit: number = 5): Promise<void> => {
+    try {
+      const res = await API.get('/attendances', {
+        params: {
+          page,
+          limit,
+        },
+      });
 
-  const fetchAttendances = async (page: number = 1, limit: number = 5) => {
-  setLoading(true);
-  try {
-    const res = await API.get('/attendances', {
-      params: {
-        page,
-        limit,
-      },
-    });
-
-    setAttendances(res.data.data);
-    setTotalRows(res.data.meta.total); // ambil total dari backend
-  } catch (err) {
-    console.error('Failed to fetch attendances:', err);
-  } finally {
-    setLoading(false);
-  }
-};
+      setAttendances(res.data.data);
+    } catch (error) {
+      console.error('Failed to fetch attendances:', error);
+    }
+  };
 
   useEffect(() => {
-  fetchAttendances(page + 1, rowsPerPage);
-}, [page, rowsPerPage]);
+    fetchAttendances(page + 1, rowsPerPage);
+  }, [page, rowsPerPage]);
 
-
-  const handleQRScan = async (data: string) => {
+  const handleQRScan = async (data: string): Promise<void> => {
     try {
       const res = await API.post('/attendances/scan', { qrcode: data });
       setScanResult(`✅ Berhasil: ${res.data.message || 'Data ditambahkan.'}`);
       fetchAttendances();
-    } catch (err: any) {
-      console.error(err);
-      setScanResult(`❌ Gagal: ${err.response?.data?.message || 'Terjadi kesalahan.'}`);
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.error(error);
+      setScanResult(`❌ Gagal: ${apiError.response?.data?.message || 'Terjadi kesalahan.'}`);
     } finally {
       setScannerOpen(false);
       setResultModalOpen(true);
     }
   };
 
-  const handleEdit = async (id: number, updatedData: Partial<Attendance>) => {
+  const handleEdit = async (id: number, updatedData: Partial<Attendance>): Promise<void> => {
     try {
       await API.put(`/attendances/${id}`, updatedData);
       fetchAttendances();
-    } catch (err) {
-      console.error('Gagal edit:', err);
+    } catch (error) {
+      console.error('Gagal edit:', error);
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: number): Promise<void> => {
     try {
       await API.delete(`/attendances/${id}`);
       fetchAttendances();
-    } catch (err) {
-      console.error('Gagal hapus:', err);
+    } catch (error) {
+      console.error('Gagal hapus:', error);
     }
   };
 
-  const openEditModal = (id: number) => {
+  const openEditModal = (id: number): void => {
     const found = attendances.find((a) => a.id === id);
     if (found) {
       setSelectedAttendance(found);
@@ -118,41 +146,24 @@ export default function Page(): React.JSX.Element {
     }
   };
 
-  const handleExportAll = () => {
-    const data = attendances.map(formatAttendance);
+  const handleExportAll = (): void => {
+    const data = attendances.map((a) => formatAttendance(a));
     exportToSpreadsheet(data, 'all_attendance.xlsx');
   };
 
-  const handleExportToday = () => {
+  const handleExportToday = (): void => {
     const today = new Date().toISOString().split('T')[0];
     const data = attendances
       .filter((a) => a.date.toString().startsWith(today))
-      .map(formatAttendance);
+      .map((a) => formatAttendance(a));
     exportToSpreadsheet(data, `attendance_today_${today}.xlsx`);
   };
 
-  const handleExportByStatus = (status: string) => {
+  const handleExportByStatus = (status: string): void => {
     const data = attendances
       .filter((a) => a.status === status)
-      .map(formatAttendance);
+      .map((a) => formatAttendance(a));
     exportToSpreadsheet(data, `attendance_${status}.xlsx`);
-  };
-
-  const formatAttendance = (a: Attendance) => ({
-    Name: a.user?.name || a.name,
-    Email: a.user?.email || a.email,
-    Class: a.class,
-    Date: new Date(a.date).toLocaleDateString(),
-    Time: new Date(a.time).toLocaleTimeString(),
-    Method: a.method,
-    Status: a.status,
-  });
-
-  const exportToSpreadsheet = (data: any[], fileName: string) => {
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Attendances');
-    XLSX.writeFile(workbook, fileName);
   };
 
   const paginatedAttendances = applyPagination(attendances, page, rowsPerPage);
@@ -234,8 +245,8 @@ export default function Page(): React.JSX.Element {
           try {
             await API.post('/attendances', data);
             fetchAttendances();
-          } catch (err) {
-            console.error('Gagal tambah data:', err);
+          } catch (error) {
+            console.error('Gagal tambah data:', error);
           }
         }}
       />
@@ -246,7 +257,7 @@ export default function Page(): React.JSX.Element {
         onClose={() => setEditModalOpen(false)}
         onSave={async (updatedData) => {
           if (selectedAttendance) {
-            await handleEdit(selectedAttendance.id, updatedData as any);
+            await handleEdit(selectedAttendance.id, updatedData as Partial<Attendance>);
             setEditModalOpen(false);
           }
         }}

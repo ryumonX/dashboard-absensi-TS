@@ -27,25 +27,38 @@ export interface Grade {
   createdAt?: string;
 }
 
+interface GradeFormData {
+  subjectId: number;
+  teacherId: number;
+  semester: string;
+  score: number;
+  remarks?: string;
+}
 
 interface GradeEditModalProps {
   open: boolean;
   onClose: () => void;
   data: Grade | null;
-  onSave: (data: Partial<Grade>) => void;
+  onSave: (data: GradeFormData) => void;
 }
 
 export const GradeEditModal: React.FC<GradeEditModalProps> = ({ open, onClose, data, onSave }) => {
   const [form, setForm] = React.useState({
     score: '',
-    remarks: ''
+    remarks: '',
+    semester: '',
+    subjectId: '',
+    teacherId: ''
   });
 
   React.useEffect(() => {
     if (data) {
       setForm({
         score: String(data.score),
-        remarks: data.remarks || ''
+        remarks: data.remarks || '',
+        semester: data.semester,
+        subjectId: String(data.subject.id),
+        teacherId: String(data.teacher.id)
       });
     }
   }, [data]);
@@ -57,8 +70,11 @@ export const GradeEditModal: React.FC<GradeEditModalProps> = ({ open, onClose, d
 
   const handleSubmit = () => {
     onSave({
+      subjectId: Number(form.subjectId),
+      teacherId: Number(form.teacherId),
+      semester: form.semester,
       score: Number(form.score),
-      remarks: form.remarks || null
+      remarks: form.remarks || undefined
     });
   };
 
@@ -66,6 +82,14 @@ export const GradeEditModal: React.FC<GradeEditModalProps> = ({ open, onClose, d
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>Edit Grade</DialogTitle>
       <DialogContent sx={{ pt: 2 }}>
+        <TextField
+          fullWidth
+          margin="normal"
+          name="semester"
+          label="Semester"
+          value={form.semester}
+          onChange={handleChange}
+        />
         <TextField
           fullWidth
           margin="normal"

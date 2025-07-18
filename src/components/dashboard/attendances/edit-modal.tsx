@@ -11,7 +11,6 @@ import {
   MenuItem
 } from '@mui/material';
 import dayjs from 'dayjs';
-// import { attendance } from './attendancesTable';
 import { Attendance } from './attendance-table';
 
 interface AttendanceEditModalProps {
@@ -56,7 +55,7 @@ export function AttendanceEditModal({
   onSave({
     ...form,
     date: isoTime,
-    time: isoTime, 
+    time: isoTime,
   });
     onClose();
   };
@@ -88,7 +87,7 @@ export function AttendanceEditModal({
           fullWidth
           label="Kelas"
           name="className"
-          value={form.className || ''}
+          value={form.class || ''}
           onChange={handleChange}
         />
         <TextField

@@ -5,13 +5,22 @@ import {
   TextField, Button, MenuItem, CircularProgress, Box,
   Paper, Typography, Divider
 } from '@mui/material';
-import API from '@/lib/axioClient';
+import API from '@/lib/axio-client';
+
+interface GradeData {
+  userId: number;
+  subjectId: number;
+  teacherId: number;
+  semester: string;
+  score: number;
+  remarks?: string
+}
 
 interface GradeAddModalProps {
   open: boolean;
   onClose: () => void;
   studentId: number;
-  onSave: (data: any[]) => void;
+  onSave: (data: GradeData[]) => void;
 }
 
 type Teacher = {
@@ -76,7 +85,7 @@ export const GradeAddModal: React.FC<GradeAddModalProps> = ({
   };
 
   const handleSubmit = () => {
-    const gradeData = subjects
+    const gradeData: GradeData[] = subjects
       .filter(subject => form.scores[subject.id])
       .map(subject => ({
         userId: studentId,
@@ -84,7 +93,7 @@ export const GradeAddModal: React.FC<GradeAddModalProps> = ({
         teacherId: form.teacher?.id ?? 0,
         semester: form.semester,
         score: Number(form.scores[subject.id]),
-        remarks: form.remarks[subject.id] || null
+        remarks: form.remarks[subject.id],
       }));
 
     onSave(gradeData);

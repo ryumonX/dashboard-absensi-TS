@@ -7,11 +7,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z as zod } from 'zod';
 import {
   Stack, Typography, FormControl, InputLabel, OutlinedInput,
-  FormHelperText, Button, Alert, Link, IconButton, Box
+  FormHelperText, Button, Alert, IconButton, Box
 } from '@mui/material';
 import { EyeIcon, EyeSlashIcon } from '@phosphor-icons/react';
 
-import RouterLink from 'next/link';
 import { authClient } from '@/lib/auth/client';
 import { useUser } from '@/hooks/use-user';
 
@@ -118,12 +117,6 @@ export function SignInForm(): React.JSX.Element {
             )}
           />
 
-          {/* Forgot password */}
-          <div>
-            <Link component={RouterLink} href="/auth/reset-password" variant="body2">
-              Lupa password?
-            </Link>
-          </div>
 
           {/* Root/server error */}
           {errors.root && (

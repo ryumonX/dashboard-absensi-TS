@@ -13,6 +13,7 @@ import Typography from '@mui/material/Typography';
 import { GearSixIcon } from '@phosphor-icons/react/dist/ssr/GearSix';
 import { SignOutIcon } from '@phosphor-icons/react/dist/ssr/SignOut';
 import { UserIcon } from '@phosphor-icons/react/dist/ssr/User';
+import Cookies from 'js-cookie';
 
 import { paths } from '@/paths';
 import { authClient } from '@/lib/auth/client';
@@ -23,6 +24,20 @@ export interface UserPopoverProps {
   anchorEl: Element | null;
   onClose: () => void;
   open: boolean;
+}
+
+// Helper function to clear cookies
+function clearAllCookies(): void {
+  // Get all cookie names
+  const allCookies = Cookies.get();
+
+  // Remove each cookie
+  for (const cookieName of Object.keys(allCookies)) {
+    Cookies.remove(cookieName);
+    // Also try to remove with different path options
+    Cookies.remove(cookieName, { path: '/' });
+    Cookies.remove(cookieName, { path: '', domain: globalThis.location.hostname });
+  }
 }
 
 export function UserPopover({ anchorEl, onClose, open }: UserPopoverProps): React.JSX.Element {
@@ -43,11 +58,7 @@ export function UserPopover({ anchorEl, onClose, open }: UserPopoverProps): Reac
       sessionStorage.clear();
 
       // 3. Clear cookies (client-side only)
-      document.cookie.split(';').forEach((c) => {
-        document.cookie = c
-          .replace(/^ +/, '')
-          .replace(/=.*/, '=;expires=' + new Date(0).toUTCString() + ';path=/');
-      });
+      clearAllCookies();
 
       // 4. Refresh session & router
       await checkSession?.();

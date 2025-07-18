@@ -4,7 +4,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Button, Stack
 } from '@mui/material';
-import API from '@/lib/axioClient';
+import API from '@/lib/axio-client';
 import { Student } from '@/app/dashboard/students/page';
 
 interface Props {
@@ -27,29 +27,25 @@ export default function StudentFormModal({ open, onClose, onSuccess, initialData
   });
 
   useEffect(() => {
-    if (initialData) {
-      setForm({
-        name: initialData.name || '',
-        email: initialData.email || '',
-        password: '',
-        phoneNumber: initialData.phoneNumber || '',
-        destinationCountry: initialData.destinationCountry || '',
-        dateOfBirth: initialData.dateOfBirth || '',
-        jobName: initialData.jobName || '',
-        progressNumber: initialData.progressNumber?.toString() || '',
-      });
-    } else {
-      setForm({
-        name: '',
-        email: '',
-        password: '',
-        phoneNumber: '',
-        destinationCountry: '',
-        dateOfBirth: '',
-        jobName: '',
-        progressNumber: '',
-      });
-    }
+    setForm(initialData ? {
+      name: initialData.name || '',
+      email: initialData.email || '',
+      password: '',
+      phoneNumber: initialData.phoneNumber || '',
+      destinationCountry: initialData.destinationCountry || '',
+      dateOfBirth: initialData.dateOfBirth || '',
+      jobName: initialData.jobName || '',
+      progressNumber: initialData.progressNumber?.toString() || '',
+    } : {
+      name: '',
+      email: '',
+      password: '',
+      phoneNumber: '',
+      destinationCountry: '',
+      dateOfBirth: '',
+      jobName: '',
+      progressNumber: '',
+    });
   }, [initialData]);
 
   const handleSubmit = async () => {
@@ -62,7 +58,7 @@ export default function StudentFormModal({ open, onClose, onSuccess, initialData
         destinationCountry: form.destinationCountry || undefined,
         dateOfBirth: form.dateOfBirth ? new Date(form.dateOfBirth).toISOString() : undefined,
         jobName: form.jobName || undefined,
-        progressNumber: form.progressNumber ? parseInt(form.progressNumber) : undefined,
+        progressNumber: form.progressNumber ? Number.parseInt(form.progressNumber) : undefined,
         role: 'student',
       };
 

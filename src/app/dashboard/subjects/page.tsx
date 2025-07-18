@@ -7,12 +7,12 @@ import { DownloadIcon } from '@phosphor-icons/react/dist/ssr/Download';
 import { PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
 import { UploadIcon } from '@phosphor-icons/react/dist/ssr/Upload';
 
-import API from '@/lib/axioClient';
+import API from '@/lib/axio-client';
 import { SubjectsFilters } from '@/components/dashboard/subjects/subject-filters';
 import { SubjectsTable } from '@/components/dashboard/subjects/subject-table';
 import { SubjectAddModal } from '@/components/dashboard/subjects/add-modal';
 import { SubjectEditModal } from '@/components/dashboard/subjects/edit-modal';
-import { AssignTeacherModal } from '@/components/dashboard/subjects/assignTeacher';
+import { AssignTeacherModal } from '@/components/dashboard/subjects/assign-teacher';
 
 export interface Subject {
   id: number;
@@ -26,6 +26,12 @@ export interface Subject {
   }[];
 }
 
+interface SubjectData {
+  name: string;
+  description?: string;
+  code?: string;
+}
+
 export default function Page(): React.JSX.Element {
   const [subjects, setSubjects] = React.useState<Subject[]>([]);
   const [page, setPage] = React.useState(0);
@@ -37,48 +43,48 @@ export default function Page(): React.JSX.Element {
   const [assignOpen, setAssignOpen] = React.useState(false);
   const [selectedSubjectId, setSelectedSubjectId] = React.useState<number | null>(null);
 
-  const selectedSubject = selectedSubjectId !== null
-    ? subjects.find((s) => s.id === selectedSubjectId) || null
-    : null;
+  const selectedSubject = selectedSubjectId === null
+    ? null
+    : subjects.find((s) => s.id === selectedSubjectId) || null;
 
-  const fetchSubjects = async () => {
+  const fetchSubjects = React.useCallback(async (): Promise<void> => {
     try {
       const res = await API.get('/subjects', {
         params: { page: page + 1, limit: rowsPerPage },
       });
       setSubjects(res.data.data);
       setTotal(res.data.meta?.total || 0);
-    } catch (err) {
-      console.error('Failed to fetch subjects:', err);
+    } catch (error) {
+      console.error('Failed to fetch subjects:', error);
     }
-  };
+  }, [page, rowsPerPage]);
 
   React.useEffect(() => {
-    fetchSubjects();
-  }, [page, rowsPerPage]); // <-- Tambahkan dependency agar refresh saat paginasi berubah
+    void fetchSubjects();
+  }, [fetchSubjects]);
 
-  const handleAdd = async (data: any) => {
+  const handleAdd = async (data: SubjectData): Promise<void> => {
     try {
       await API.post('/subjects', data);
-      fetchSubjects();
+      await fetchSubjects();
     } catch (error) {
       console.error('Add failed:', error);
     }
   };
 
-  const handleEdit = async (id: number, data: any) => {
+  const handleEdit = async (id: number, data: SubjectData): Promise<void> => {
     try {
       await API.put(`/subjects/${id}`, data);
-      fetchSubjects();
+      await fetchSubjects();
     } catch (error) {
       console.error('Edit failed:', error);
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: number): Promise<void> => {
     try {
       await API.delete(`/subjects/${id}`);
-      fetchSubjects();
+      await fetchSubjects();
     } catch (error) {
       console.error('Delete failed:', error);
     }
@@ -146,8 +152,8 @@ export default function Page(): React.JSX.Element {
           setSelectedSubjectId(null);
         }}
         onSave={(data) => {
-          if (!selectedSubject) return;
-          handleEdit(selectedSubject.id, data);
+          if (!selectedSubject || !data.name) return;
+          void handleEdit(selectedSubject.id, data as SubjectData);
           setEditOpen(false);
           setSelectedSubjectId(null);
         }}
@@ -161,7 +167,7 @@ export default function Page(): React.JSX.Element {
           setSelectedSubjectId(null);
         }}
         onSuccess={() => {
-          fetchSubjects();
+          void fetchSubjects();
           setAssignOpen(false);
           setSelectedSubjectId(null);
         }}

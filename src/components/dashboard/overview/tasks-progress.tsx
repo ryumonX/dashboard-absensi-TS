@@ -9,7 +9,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { ListBulletsIcon } from '@phosphor-icons/react/dist/ssr/ListBullets';
 import type { SxProps } from '@mui/material/styles';
-import API from '@/lib/axioClient';
+import API from '@/lib/axio-client';
 
 export interface TasksProgressProps {
   sx?: SxProps;

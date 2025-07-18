@@ -12,7 +12,7 @@ import {
   Button,
 } from '@mui/material';
 import { useRouter, useParams } from 'next/navigation';
-import API from '@/lib/axioClient';
+import API from '@/lib/axio-client';
 import dayjs from 'dayjs';
 import { FunnelSimple, ArrowLeft } from '@phosphor-icons/react';
 import { AttendanceHistoryTable } from '@/components/dashboard/students/attendancehistory';
@@ -27,7 +27,7 @@ interface Attendance {
 
 export default function AttendanceHistoryPage() {
   const params = useParams();
-  const userId = parseInt(params.id as string);
+  const userId = Number.parseInt(params.id as string);
   const router = useRouter();
 
   const [attendances, setAttendances] = useState<Attendance[]>([]);

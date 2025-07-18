@@ -194,7 +194,7 @@ export function StudentsTable({
         page={page}
         rowsPerPage={rowsPerPage}
         onPageChange={(_, newPage) => onPageChange?.(newPage)}
-        onRowsPerPageChange={(e) => onRowsPerPageChange?.(parseInt(e.target.value))}
+        onRowsPerPageChange={(e) => onRowsPerPageChange?.(Number.parseInt(e.target.value))}
         rowsPerPageOptions={[5, 10, 25]}
       />
     </Card>

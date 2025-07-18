@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import React, { useEffect, useState, useMemo } from 'react';
 import dayjs from 'dayjs';
-import API from '@/lib/axioClient';
+import API from '@/lib/axio-client';
 import {
   CheckCircle, XCircle, User, Envelope,
   FloppyDiskBack, X
@@ -32,6 +32,17 @@ interface Student {
   email: string;
 }
 
+interface ApiUser {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+}
+
+interface ApiResponse {
+  data?: ApiUser[];
+}
+
 type AttendanceStatus = 'present' | 'absent' | null;
 
 export function AttendanceAddModal({ open, onClose, onSave }: AttendanceModalProps) {
@@ -47,17 +58,17 @@ export function AttendanceAddModal({ open, onClose, onSave }: AttendanceModalPro
       setIsLoading(true);
       try {
         const res = await API.get('/user');
-        const data = Array.isArray(res.data) ? res.data : res.data.data || [];
-        const filtered = data.filter((user: any) => user.role === 'student');
+        const data = Array.isArray(res.data) ? res.data : (res.data as ApiResponse).data || [];
+        const filtered = data.filter((user: ApiUser) => user.role === 'student');
         setStudentList(filtered);
 
         const initialMap: Record<number, AttendanceStatus> = {};
-        filtered.forEach((student: Student) => {
+        for (const student of filtered) {
           initialMap[student.id] = null;
-        });
+        }
         setAttendanceMap(initialMap);
-      } catch (err) {
-        console.error('Failed to fetch students:', err);
+      } catch (error) {
+        console.error('Failed to fetch students:', error);
       } finally {
         setIsLoading(false);
       }
@@ -85,9 +96,9 @@ export function AttendanceAddModal({ open, onClose, onSave }: AttendanceModalPro
 
   const handleSubmit = () => {
     const now = dayjs().toISOString();
-    studentList.forEach(student => {
+    for (const student of studentList) {
       const attendanceStatus = attendanceMap[student.id];
-      if (!attendanceStatus) return;
+      if (!attendanceStatus) continue;
       onSave({
         userId: student.id,
         class: 'English',
@@ -96,7 +107,7 @@ export function AttendanceAddModal({ open, onClose, onSave }: AttendanceModalPro
         date: now,
         time: now,
       });
-    });
+    }
     onClose();
   };
 

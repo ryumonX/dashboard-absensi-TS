@@ -1,17 +1,37 @@
 'use client';
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import API from '@/lib/axioClient';
-import { Stack, Button, Typography } from '@mui/material';
+import API from '@/lib/axio-client';
+import { Stack, Typography } from '@mui/material';
 import { GradesFilters } from '@/components/dashboard/grades/grades-filters';
 import { GradesTable } from '@/components/dashboard/grades/grades-table';
 import { GradeModal } from '@/components/dashboard/grades/grade-modal';
 
 import type { Grade } from '@/components/dashboard/grades/grades-table';
 
+interface GradeFormData {
+  subjectId: number;
+  teacherId: number;
+  semester: string;
+  score: number;
+  remarks?: string;
+}
+
+// Moved async functions to outer scope
+const handleAdd = async (data: GradeFormData): Promise<void> => {
+  await API.post('/grades', data);
+};
+
+const handleEdit = async (id: number, data: GradeFormData): Promise<void> => {
+  await API.put(`/grades/${id}`, data);
+};
+
+const handleDelete = async (id: number): Promise<void> => {
+  await API.delete(`/grades/${id}`);
+};
+
 export default function Page(): React.JSX.Element {
   const [grades, setGrades] = useState<Grade[]>([]);
-  const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [totalRows, setTotalRows] = useState(0);
@@ -24,37 +44,22 @@ export default function Page(): React.JSX.Element {
 
   const [modalOpen, setModalOpen] = useState(false);
 
-  const fetchGrades = async (page = 1, limit = 5) => {
-    setLoading(true);
+  const fetchGrades = async (pageNumber = 1, limit = 5): Promise<void> => {
     try {
       const res = await API.get('/user', {
-        params: { page, limit },
+        params: { page: pageNumber, limit },
       });
 
       setGrades(res.data.data);
       setTotalRows(res.data.meta.total);
-    } catch (err) {
-      console.error('Gagal fetch grades:', err);
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error('Gagal fetch grades:', error);
     }
   };
 
   useEffect(() => {
     fetchGrades(page + 1, rowsPerPage);
   }, [page, rowsPerPage]);
-
-  const handleAdd = async (data: any[]) => {
-    await API.post('/grades', data);
-  };
-
-  const handleEdit = async (id: number, data: any) => {
-    await API.put(`/grades/${id}`, data);
-  };
-
-  const handleDelete = async (id: number) => {
-    await API.delete(`/grades/${id}`);
-  };
 
   return (
     <>

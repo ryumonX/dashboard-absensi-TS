@@ -1,14 +1,12 @@
 import * as React from 'react';
 import type { Metadata } from 'next';
 import Grid from '@mui/material/Grid';
-import dayjs from 'dayjs';
 import { config } from '@/config';
 import { Budget } from '@/components/dashboard/overview/budget';
 import { Sales } from '@/components/dashboard/overview/sales';
 import { TasksProgress } from '@/components/dashboard/overview/tasks-progress';
 import { TotalCustomers } from '@/components/dashboard/overview/total-customers';
 import { TotalProfit } from '@/components/dashboard/overview/total-profit';
-import { Traffic } from '@/components/dashboard/overview/traffic';
 
 export const metadata = { title: `Overview | Dashboard | ${config.site.name}` } satisfies Metadata;
 
@@ -31,7 +29,7 @@ export default function Page(): React.JSX.Element {
           xs: 12,
         }}
       >
-        <TotalCustomers diff={16} trend="down" sx={{ height: '100%' }} value="1.6k" />
+        <TotalCustomers sx={{ height: '100%' }} value="1.6k" />
       </Grid>
       <Grid
         size={{
@@ -61,15 +59,6 @@ export default function Page(): React.JSX.Element {
           sx={{ height: '100%' }}
         />
       </Grid>
-      {/* <Grid
-        size={{
-          lg: 4,
-          md: 6,
-          xs: 12,
-        }}
-      >
-        <Traffic chartSeries={[63, 15, 22]} labels={['Desktop', 'Tablet', 'Phone']} sx={{ height: '100%' }} />
-      </Grid> */}
       <Grid
         size={{
           lg: 4,

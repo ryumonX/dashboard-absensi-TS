@@ -5,7 +5,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Button, Stack, MenuItem
 } from '@mui/material';
-import API from '@/lib/axioClient';
+import API from '@/lib/axio-client';
 import dayjs from 'dayjs';
 import { User } from '@/app/dashboard/users/page';
 
@@ -69,7 +69,7 @@ export default function UserFormModal({ open, onClose, onSuccess, initialData }:
 
     const id =
       typeof initialData?.id === 'string'
-        ? parseInt(initialData.id, 10)
+        ? Number.parseInt(initialData.id, 10)
         : initialData?.id;
 
     if (initialData && id) {

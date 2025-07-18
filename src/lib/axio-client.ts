@@ -3,7 +3,7 @@ import axios from 'axios';
 // Buat instance axios
 const API = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api', // Sesuaikan baseURL-nya
-  timeout: 10000, // timeout 10 detik
+  timeout: 10_000, // timeout 10 detik
   withCredentials: true, // untuk mengirim cookie saat menggunakan auth berbasis cookie
 });
 
@@ -11,7 +11,7 @@ const API = axios.create({
 API.interceptors.request.use(
   (config) => {
     // Kalau kamu pakai token di localStorage:
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const token = globalThis.window ? localStorage.getItem('token') : null;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

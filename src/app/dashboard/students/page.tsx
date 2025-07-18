@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import API from '@/lib/axioClient';
+import API from '@/lib/axio-client';
 
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
@@ -29,9 +29,23 @@ export interface Student {
   progressNumber?: number;
 }
 
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  password?: string;
+  avatar?: string;
+  phoneNumber?: string;
+  destinationCountry?: string;
+  dateOfBirth?: string;
+  createdAt?: Date;
+  jobName?: string;
+  progressNumber?: number;
+}
+
 export default function Page(): React.JSX.Element {
   const [students, setStudents] = useState<Student[]>([]);
-  const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [editStudent, setEditStudent] = useState<Student | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
@@ -40,29 +54,25 @@ export default function Page(): React.JSX.Element {
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
   // Ambil data dari API
-  const fetchStudents = async () => {
-  setLoading(true);
-  try {
-    const res = await API.get('/user');
-    const allUsers = res.data.data;
+  const fetchStudents = async (): Promise<void> => {
+    try {
+      const res = await API.get('/user');
+      const allUsers = res.data.data as User[];
 
-    const onlyStudents = allUsers.filter((user: any) => user.role === 'student');
+      const onlyStudents = allUsers.filter((user: User) => user.role === 'student');
 
-    setStudents(onlyStudents);
-  } catch (error) {
-    console.error('Error fetching students:', error);
-  } finally {
-    setLoading(false);
-  }
-};
-
+      setStudents(onlyStudents);
+    } catch (error) {
+      console.error('Error fetching students:', error);
+    }
+  };
 
   useEffect(() => {
     fetchStudents();
   }, []);
 
   // Hapus siswa
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: number): Promise<void> => {
     try {
       await API.delete(`/user/${id}`);
       fetchStudents();
@@ -72,16 +82,15 @@ export default function Page(): React.JSX.Element {
   };
 
   // Edit siswa
-  const handleEdit = (student: Student) => {
+  const handleEdit = (student: Student): void => {
     setEditStudent(student);
     setOpenModal(true);
   };
 
-  const handleViewDetail = (id: number) => {
+  const handleViewDetail = (id: number): void => {
     setSelectedUserId(id);
     setOpenDetailModal(true);
   };
-
 
   // Pagination
   const paginatedStudents = students.slice(
