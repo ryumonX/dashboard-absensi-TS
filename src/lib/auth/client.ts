@@ -1,17 +1,20 @@
 // lib/authClient.ts
 import type { User } from '@/types/user';
 import API from '../axio-client';
+import { AxiosError } from 'axios';
 
 class AuthClient {
   async signInWithPassword(params: { email: string; password: string }): Promise<{ error?: string }> {
-    try {
-      await API.post('/auth/login', params); // credentials: true sudah otomatis dari axios instance
-      return {};
-    } catch (err: any) {
-      const message = err.response?.data?.message || 'Login gagal';
-      return { error: message };
-    }
+  try {
+    await API.post('/auth/login', params); // credentials: true sudah otomatis
+    return {};
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError<{ message: string }>;
+    const message = axiosError.response?.data?.message || 'Login gagal';
+    return { error: message };
   }
+}
+
 
   async getUser(): Promise<{ data?: User | null; error?: string }> {
     try {

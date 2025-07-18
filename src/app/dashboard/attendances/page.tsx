@@ -149,7 +149,7 @@ export default function Page(): React.JSX.Element {
       const res = await API.get('/attendances', {
         params: {
           page: 1,
-          limit: 100000,
+          limit: 100_000,
         },
       });
 
