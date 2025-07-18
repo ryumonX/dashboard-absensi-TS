@@ -1,6 +1,6 @@
 // lib/authClient.ts
 import type { User } from '@/types/user';
-import API from './axio-client'; // pastikan path sesuai
+import API from '../axio-client';
 
 class AuthClient {
   async signInWithPassword(params: { email: string; password: string }): Promise<{ error?: string }> {
