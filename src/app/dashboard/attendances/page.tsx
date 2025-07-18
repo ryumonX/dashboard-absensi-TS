@@ -56,7 +56,6 @@ interface ApiError {
   };
 }
 
-// Move exportToSpreadsheet to outer scope
 const exportToSpreadsheet = (data: ExportedAttendance[], fileName: string): void => {
   const worksheet = XLSX.utils.json_to_sheet(data);
   const workbook = XLSX.utils.book_new();
@@ -80,6 +79,7 @@ export default function Page(): React.JSX.Element {
   const [resultModalOpen, setResultModalOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [total, setTotal] = useState(0);
   const [attendances, setAttendances] = useState<Attendance[]>([]);
 
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -89,13 +89,11 @@ export default function Page(): React.JSX.Element {
   const fetchAttendances = async (page: number = 1, limit: number = 5): Promise<void> => {
     try {
       const res = await API.get('/attendances', {
-        params: {
-          page,
-          limit,
-        },
+        params: { page, limit },
       });
 
       setAttendances(res.data.data);
+      setTotal(res.data.meta.total);
     } catch (error) {
       console.error('Failed to fetch attendances:', error);
     }
@@ -146,9 +144,21 @@ export default function Page(): React.JSX.Element {
     }
   };
 
-  const handleExportAll = (): void => {
-    const data = attendances.map((a) => formatAttendance(a));
-    exportToSpreadsheet(data, 'all_attendance.xlsx');
+  const handleExportAll = async (): Promise<void> => {
+    try {
+      const res = await API.get('/attendances', {
+        params: {
+          page: 1,
+          limit: 100000,
+        },
+      });
+
+      const allData = res.data.data;
+      const formatted = allData.map((a: Attendance) => formatAttendance(a));
+      exportToSpreadsheet(formatted, 'all_attendance.xlsx');
+    } catch (error) {
+      console.error('Gagal export semua:', error);
+    }
   };
 
   const handleExportToday = (): void => {
@@ -165,8 +175,6 @@ export default function Page(): React.JSX.Element {
       .map((a) => formatAttendance(a));
     exportToSpreadsheet(data, `attendance_${status}.xlsx`);
   };
-
-  const paginatedAttendances = applyPagination(attendances, page, rowsPerPage);
 
   return (
     <Stack spacing={3}>
@@ -207,10 +215,10 @@ export default function Page(): React.JSX.Element {
       <AttendancesFilters />
 
       <AttendancesTable
-        count={attendances.length}
+        count={total}
         page={page}
         rowsPerPage={rowsPerPage}
-        rows={paginatedAttendances}
+        rows={attendances}
         onPageChange={(newPage) => setPage(newPage)}
         onRowsPerPageChange={(newRowsPerPage) => {
           setRowsPerPage(newRowsPerPage);
@@ -264,8 +272,4 @@ export default function Page(): React.JSX.Element {
       />
     </Stack>
   );
-}
-
-function applyPagination(rows: Attendance[], page: number, rowsPerPage: number): Attendance[] {
-  return rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 }

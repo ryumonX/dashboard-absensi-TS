@@ -1,37 +1,22 @@
 // lib/authClient.ts
 import type { User } from '@/types/user';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+import API from './axio-client'; // pastikan path sesuai
 
 class AuthClient {
   async signInWithPassword(params: { email: string; password: string }): Promise<{ error?: string }> {
     try {
-      const res = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(params),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        return { error: err.message || 'Login gagal' };
-      }
-
+      await API.post('/auth/login', params); // credentials: true sudah otomatis dari axios instance
       return {};
-    } catch {
-      return { error: 'Gagal terhubung ke server' };
+    } catch (err: any) {
+      const message = err.response?.data?.message || 'Login gagal';
+      return { error: message };
     }
   }
 
   async getUser(): Promise<{ data?: User | null; error?: string }> {
     try {
-      const res = await fetch(`${API_URL}/auth/me`, {
-        credentials: 'include',
-      });
-      if (!res.ok) return { data: null };
-      const user = await res.json();
-      return { data: user };
+      const res = await API.get('/auth/me');
+      return { data: res.data };
     } catch {
       return { data: null };
     }
@@ -39,11 +24,8 @@ class AuthClient {
 
   async signOut(): Promise<{ error?: string }> {
     try {
-      const res = await fetch(`${API_URL}/auth/logout`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-      return res.ok ? {} : { error: 'Logout gagal' };
+      const res = await API.post('/auth/logout');
+      return res.status === 200 ? {} : { error: 'Logout gagal' };
     } catch {
       return { error: 'Gagal logout' };
     }
