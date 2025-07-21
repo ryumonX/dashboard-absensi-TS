@@ -178,39 +178,72 @@ export default function Page(): React.JSX.Element {
 
   return (
     <Stack spacing={3}>
-      <Stack direction="row" spacing={3}>
-        <Stack spacing={1} sx={{ flex: '1 1 auto' }}>
-          <Typography variant="h4">STUDENT ATTENDANCE</Typography>
-          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-            <Button onClick={handleExportAll} color="inherit" startIcon={<DownloadIcon />}>
-              Export All
+      <Stack spacing={3}>
+        <Stack
+          direction="row"
+          spacing={3}
+          flexWrap="wrap"
+          justifyContent="space-between"
+          alignItems="flex-start"
+        >
+          {/* Judul dan tombol export */}
+          <Stack spacing={1} sx={{ flex: '1 1 300px', minWidth: 0 }}>
+            <Typography variant="h4">STUDENT ATTENDANCE</Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap">
+              <Button
+                color="inherit"
+                startIcon={<DownloadIcon fontSize="var(--icon-fontSize-md)" />}
+                onClick={handleExportAll}
+              >
+                Export All
+              </Button>
+              <Button
+                color="inherit"
+                startIcon={<DownloadIcon fontSize="var(--icon-fontSize-md)" />}
+                onClick={handleExportToday}
+              >
+                Export Today
+              </Button>
+              <Button
+                color="inherit"
+                startIcon={<DownloadIcon fontSize="var(--icon-fontSize-md)" />}
+                onClick={() => handleExportByStatus('present')}
+              >
+                Export Present
+              </Button>
+            </Stack>
+          </Stack>
+
+          {/* Tombol aksi */}
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              flexShrink: 0,
+              flexWrap: 'wrap',
+              justifyContent: 'flex-end',
+            }}
+          >
+            <Button
+              variant="contained"
+              startIcon={<PlusIcon fontSize="var(--icon-fontSize-md)" />}
+              onClick={() => setAddModalOpen(true)}
+              sx={{ minWidth: 120 }}
+            >
+              Add
             </Button>
-            <Button onClick={handleExportToday} color="inherit" startIcon={<DownloadIcon />}>
-              Export Today
-            </Button>
-            <Button onClick={() => handleExportByStatus('present')} color="inherit" startIcon={<DownloadIcon />}>
-              Export Present
+            <Button
+              variant="contained"
+              startIcon={<PlusIcon fontSize="var(--icon-fontSize-md)" />}
+              onClick={() => setScannerOpen(true)}
+              sx={{ minWidth: 120 }}
+            >
+              SCAN QR
             </Button>
           </Stack>
         </Stack>
-
-        <Stack direction="row" spacing={2}>
-          <Button
-            startIcon={<PlusIcon fontSize="var(--icon-fontSize-md)" />}
-            variant="contained"
-            onClick={() => setAddModalOpen(true)}
-          >
-            Add
-          </Button>
-          <Button
-            startIcon={<PlusIcon fontSize="var(--icon-fontSize-md)" />}
-            variant="contained"
-            onClick={() => setScannerOpen(true)}
-          >
-            SCAN QR
-          </Button>
-        </Stack>
       </Stack>
+
 
       <AttendancesFilters />
 
