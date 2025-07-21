@@ -13,6 +13,7 @@ import { SubjectsTable } from '@/components/dashboard/subjects/subject-table';
 import { SubjectAddModal } from '@/components/dashboard/subjects/add-modal';
 import { SubjectEditModal } from '@/components/dashboard/subjects/edit-modal';
 import { AssignTeacherModal } from '@/components/dashboard/subjects/assign-teacher';
+import DeleteModal from '@/components/dashboard/layout/delete-modal';
 
 export interface Subject {
   id: number;
@@ -41,7 +42,10 @@ export default function Page(): React.JSX.Element {
   const [addOpen, setAddOpen] = React.useState(false);
   const [editOpen, setEditOpen] = React.useState(false);
   const [assignOpen, setAssignOpen] = React.useState(false);
+
   const [selectedSubjectId, setSelectedSubjectId] = React.useState<number | null>(null);
+  const [openDeleteModal, setOpenDeleteModal] = React.useState(false);
+  const [deletingId, setDeletingId] = React.useState<number | null>(null);
 
   const selectedSubject = selectedSubjectId === null
     ? null
@@ -81,12 +85,21 @@ export default function Page(): React.JSX.Element {
     }
   };
 
-  const handleDelete = async (id: number): Promise<void> => {
+  const confirmDelete = (id: number): void => {
+    setDeletingId(id);
+    setOpenDeleteModal(true);
+  };
+
+  const handleDeleteConfirmed = async (): Promise<void> => {
+    if (!deletingId) return;
     try {
-      await API.delete(`/subjects/${id}`);
+      await API.delete(`/subjects/${deletingId}`);
       await fetchSubjects();
     } catch (error) {
       console.error('Delete failed:', error);
+    } finally {
+      setOpenDeleteModal(false);
+      setDeletingId(null);
     }
   };
 
@@ -125,13 +138,13 @@ export default function Page(): React.JSX.Element {
         onPageChange={(newPage) => setPage(newPage)}
         onRowsPerPageChange={(newLimit) => {
           setRowsPerPage(newLimit);
-          setPage(0); // reset ke halaman pertama
+          setPage(0);
         }}
         onEdit={(id) => {
           setSelectedSubjectId(id);
           setEditOpen(true);
         }}
-        onDelete={handleDelete}
+        onDelete={(id) => confirmDelete(id)}
         onAssign={(subject) => {
           setSelectedSubjectId(subject.id);
           setAssignOpen(true);
@@ -171,6 +184,12 @@ export default function Page(): React.JSX.Element {
           setAssignOpen(false);
           setSelectedSubjectId(null);
         }}
+      />
+
+      <DeleteModal
+        isOpen={openDeleteModal}
+        onClose={() => setOpenDeleteModal(false)}
+        onConfirm={handleDeleteConfirmed}
       />
     </Stack>
   );

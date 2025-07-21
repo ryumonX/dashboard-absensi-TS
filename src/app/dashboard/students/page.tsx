@@ -14,6 +14,7 @@ import { UploadIcon } from '@phosphor-icons/react/dist/ssr/Upload';
 import { StudentsTable } from '@/components/dashboard/students/students-table';
 import StudentFormModal from '@/components/dashboard/students/student-form-modal';
 import StudentDetailModal from '@/components/dashboard/students/detailuser';
+import DeleteModal from '@/components/dashboard/layout/delete-modal';
 
 export interface Student {
   id: number;
@@ -50,6 +51,10 @@ export default function Page(): React.JSX.Element {
   const [editStudent, setEditStudent] = useState<Student | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [openDetailModal, setOpenDetailModal] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
+
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
@@ -74,10 +79,15 @@ export default function Page(): React.JSX.Element {
   // Hapus siswa
   const handleDelete = async (id: number): Promise<void> => {
     try {
+      setIsDeleting(true);
       await API.delete(`/user/${id}`);
       fetchStudents();
     } catch (error) {
       console.error('Delete failed:', error);
+    } finally {
+      setIsDeleting(false);
+      setDeleteModalOpen(false);
+      setStudentToDelete(null);
     }
   };
 
@@ -134,7 +144,13 @@ export default function Page(): React.JSX.Element {
           setPage(0);
         }}
         onEdit={handleEdit}
-        onDelete={handleDelete}
+        onDelete={(id) => {
+          const student = students.find((s) => s.id === id);
+          if (student) {
+            setStudentToDelete(student);
+            setDeleteModalOpen(true);
+          }
+        }}
         onViewDetail={handleViewDetail}
       />
 
@@ -153,6 +169,22 @@ export default function Page(): React.JSX.Element {
         open={openDetailModal}
         onClose={() => setOpenDetailModal(false)}
         userId={selectedUserId}
+      />
+
+      <DeleteModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          if (!isDeleting) {
+            setDeleteModalOpen(false);
+            setStudentToDelete(null);
+          }
+        }}
+        onConfirm={() => {
+          if (studentToDelete) {
+            handleDelete(studentToDelete.id);
+          }
+        }}
+        loading={isDeleting}
       />
 
     </Stack>

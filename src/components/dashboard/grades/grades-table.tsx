@@ -74,7 +74,6 @@ export function GradesTable({
                   onChange={(e) => (e.target.checked ? selectAll() : deselectAll())}
                 />
               </TableCell>
-              <TableCell>ID</TableCell>
               <TableCell>Nama Siswa</TableCell>
               <TableCell>Email</TableCell>
               <TableCell align="center">Aksi</TableCell>

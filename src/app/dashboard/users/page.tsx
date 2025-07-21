@@ -13,8 +13,8 @@ import { UploadIcon } from '@phosphor-icons/react/dist/ssr/Upload';
 
 import { UsersTable } from '@/components/dashboard/user/users-table';
 import UserFormModal from '@/components/dashboard/user/users-formmodal';
+import DeleteModal from '@/components/dashboard/layout/delete-modal';
 
-// 👇 Tipe User (id: number)
 export interface User {
   id: number;
   name: string;
@@ -35,7 +35,11 @@ export default function Page(): React.JSX.Element {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  // Ambil semua user dari API, filter selain student
+  // 🆕 DELETE MODAL STATE
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+
   const fetchUsers = async () => {
     try {
       const res = await API.get('/user');
@@ -51,12 +55,17 @@ export default function Page(): React.JSX.Element {
     void fetchUsers();
   }, []);
 
-  const handleDelete = async(id: string | number) => {
+  const handleDelete = async (id: number) => {
     try {
+      setIsDeleting(true);
       await API.delete(`/user/${id}`);
       await fetchUsers();
     } catch (error) {
       console.error('Delete failed:', error);
+    } finally {
+      setIsDeleting(false);
+      setDeleteModalOpen(false);
+      setUserToDelete(null);
     }
   };
 
@@ -105,7 +114,13 @@ export default function Page(): React.JSX.Element {
           setPage(0);
         }}
         onEdit={handleEdit}
-        onDelete={handleDelete}
+        onDelete={(id) => {
+          const user = users.find((u) => u.id === id);
+          if (user) {
+            setUserToDelete(user);
+            setDeleteModalOpen(true);
+          }
+        }}
       />
 
       <UserFormModal
@@ -118,6 +133,21 @@ export default function Page(): React.JSX.Element {
         initialData={editUser}
       />
 
+      <DeleteModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          if (!isDeleting) {
+            setDeleteModalOpen(false);
+            setUserToDelete(null);
+          }
+        }}
+        onConfirm={() => {
+          if (userToDelete) {
+            handleDelete(userToDelete.id);
+          }
+        }}
+        loading={isDeleting}
+      />
     </Stack>
   );
 }
