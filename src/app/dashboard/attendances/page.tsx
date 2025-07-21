@@ -10,6 +10,7 @@ import { DownloadIcon } from '@phosphor-icons/react/dist/ssr/Download';
 import { PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
 import * as XLSX from 'xlsx';
 
+import DeleteModal from '@/components/dashboard/layout/delete-modal';
 import QRScannerHtml5 from '@/components/dashboard/attendances/qr-scanner';
 import {
   Dialog,
@@ -84,6 +85,9 @@ export default function Page(): React.JSX.Element {
 
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [attendanceToDelete, setAttendanceToDelete] = useState<Attendance | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [selectedAttendance, setSelectedAttendance] = useState<Attendance | null>(null);
 
   const fetchAttendances = async (page: number = 1, limit: number = 5): Promise<void> => {
@@ -129,12 +133,18 @@ export default function Page(): React.JSX.Element {
 
   const handleDelete = async (id: number): Promise<void> => {
     try {
+      setIsDeleting(true);
       await API.delete(`/attendances/${id}`);
       fetchAttendances();
     } catch (error) {
       console.error('Gagal hapus:', error);
+    } finally {
+      setIsDeleting(false);
+      setDeleteModalOpen(false);
+      setAttendanceToDelete(null);
     }
   };
+
 
   const openEditModal = (id: number): void => {
     const found = attendances.find((a) => a.id === id);
@@ -250,16 +260,23 @@ export default function Page(): React.JSX.Element {
       <AttendancesTable
         count={total}
         page={page}
-        rowsPerPage={rowsPerPage}
         rows={attendances}
+        rowsPerPage={rowsPerPage}
         onPageChange={(newPage) => setPage(newPage)}
         onRowsPerPageChange={(newRowsPerPage) => {
           setRowsPerPage(newRowsPerPage);
           setPage(0);
         }}
         onEdit={(id) => openEditModal(id)}
-        onDelete={(id) => handleDelete(id)}
+        onDelete={(id) => {
+          const found = attendances.find((a) => a.id === id);
+          if (found) {
+            setAttendanceToDelete(found);
+            setDeleteModalOpen(true);
+          }
+        }}
       />
+
 
       <QRScannerHtml5
         open={scannerOpen}
@@ -303,6 +320,23 @@ export default function Page(): React.JSX.Element {
           }
         }}
       />
+
+      <DeleteModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          if (!isDeleting) {
+            setDeleteModalOpen(false)
+            setAttendanceToDelete(null)
+          }
+        }}
+        onConfirm={() => {
+          if (attendanceToDelete) {
+            handleDelete(attendanceToDelete.id)
+          }
+        }}
+        loading={isDeleting}
+      />
+
     </Stack>
   );
 }
