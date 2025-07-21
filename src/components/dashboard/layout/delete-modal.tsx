@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react';
 import { Dialog } from '@mui/material'
 import { WarningCircle } from '@phosphor-icons/react'
 import { FC } from 'react'
