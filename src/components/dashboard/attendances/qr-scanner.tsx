@@ -14,7 +14,6 @@ export default function QRScannerHtml5({ open, onClose, onScanSuccess }: QRScann
   const qrCodeRegionId = 'html5qr-code-region';
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
 
-  // Memoize callbacks to prevent unnecessary re-renders
   const handleScanSuccess = useCallback((decodedText: string) => {
     onScanSuccess(decodedText);
     onClose();
@@ -22,7 +21,6 @@ export default function QRScannerHtml5({ open, onClose, onScanSuccess }: QRScann
 
   const handleScanError = useCallback((_error: string) => {
     // Optional: log scanning errors
-    // console.warn('QR scan error:', error);
   }, []);
 
   useEffect(() => {
@@ -30,7 +28,6 @@ export default function QRScannerHtml5({ open, onClose, onScanSuccess }: QRScann
 
     const startScanner = async () => {
       try {
-        // Ensure element exists in DOM
         const regionEl = document.querySelector(`#${qrCodeRegionId}`);
         if (!regionEl) {
           console.warn('QR element not ready yet. Retrying...');
@@ -46,7 +43,14 @@ export default function QRScannerHtml5({ open, onClose, onScanSuccess }: QRScann
           return;
         }
 
-        const cameraId = devices[0].id;
+        // Cari kamera belakang jika ada
+        let cameraId = devices[0].id;
+        for (const device of devices) {
+          if (/back|environment/i.test(device.label)) {
+            cameraId = device.id;
+            break;
+          }
+        }
 
         await html5QrCodeRef.current.start(
           cameraId,
@@ -60,10 +64,9 @@ export default function QRScannerHtml5({ open, onClose, onScanSuccess }: QRScann
       }
     };
 
-    // Wait for DOM to be ready
     const delay = setTimeout(() => {
       startScanner();
-    }, 100); // Reduced delay for better performance
+    }, 100);
 
     return () => {
       clearTimeout(delay);
@@ -87,10 +90,10 @@ export default function QRScannerHtml5({ open, onClose, onScanSuccess }: QRScann
           id={qrCodeRegionId}
           style={{
             width: '100%',
-            aspectRatio: '1/1',
+            aspectRatio: '1 / 1',
             display: 'flex',
             justifyContent: 'center',
-            alignItems: 'center'
+            alignItems: 'center',
           }}
         />
       </DialogContent>
