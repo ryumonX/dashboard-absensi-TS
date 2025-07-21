@@ -4,7 +4,6 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Button, CircularProgress
 } from '@mui/material';
-import API from '@/lib/axio-client';
 
 interface SubjectData {
   id?: string;
