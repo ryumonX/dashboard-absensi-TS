@@ -7,7 +7,7 @@ import {
 import API from '@/lib/axio-client';
 
 interface SubjectData {
-  id: string;
+  id?: string;
   name: string;
 }
 
@@ -25,24 +25,24 @@ export const SubjectAddModal: React.FC<SubjectAddModalProps> = ({
   const [error, setError] = React.useState('');
 
   const handleSubmit = async () => {
-    if (!name.trim()) {
-      setError('Nama mata pelajaran tidak boleh kosong');
-      return;
-    }
+  if (!name.trim()) {
+    setError('Nama mata pelajaran tidak boleh kosong');
+    return;
+  }
 
-    setLoading(true);
-    setError('');
-    try {
-      const res = await API.post('/subjects', { name });
-      await onSave(res.data);
-      onClose();
-      setName('');
-    } catch {
-      setError('Gagal menambahkan mata pelajaran');
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  setError('');
+  try {
+    await onSave({ name }); // kirim data ke parent, biar parent yang post
+    onClose();
+    setName('');
+  } catch {
+    setError('Gagal menambahkan mata pelajaran');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   React.useEffect(() => {
     if (open) {
