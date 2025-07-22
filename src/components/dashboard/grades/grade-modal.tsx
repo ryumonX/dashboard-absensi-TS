@@ -171,12 +171,18 @@ export const GradeModal: React.FC<GradeModalProps> = ({
         onClose={() => setAddOpen(false)}
         onSave={async (data) => {
           try {
+            // Handle both single object and array cases
             if (Array.isArray(data)) {
-              await API.post('/grades', data);
+              // If data is an array, process each item
+              for (const item of data) {
+                const gradeFormData = convertToGradeFormData(item);
+                await onAdd(gradeFormData);
+              }
             } else {
-              await API.post('/grades', [data]);
+              // If data is a single object, convert and pass it
+              const gradeFormData = convertToGradeFormData(data);
+              await onAdd(gradeFormData);
             }
-
             setAddOpen(false);
             fetchGrades();
           } catch (error) {

@@ -19,7 +19,7 @@ interface GradeFormData {
 
 // Moved async functions to outer scope
 const handleAdd = async (data: GradeFormData): Promise<void> => {
-  await API.post('/grades', [data]);
+await API.post('/grades', [data]); 
 };
 
 const handleEdit = async (id: number, data: GradeFormData): Promise<void> => {
