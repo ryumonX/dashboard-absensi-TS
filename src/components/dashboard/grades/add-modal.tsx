@@ -96,9 +96,15 @@ export const GradeAddModal: React.FC<GradeAddModalProps> = ({
         remarks: form.remarks[subject.id],
       }));
 
-    onSave(gradeData);
+    if (gradeData.length === 0) {
+      alert("Please enter at least one score before submitting.");
+      return;
+    }
+
+    onSave(gradeData); // This must be an array
     onClose();
   };
+
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
