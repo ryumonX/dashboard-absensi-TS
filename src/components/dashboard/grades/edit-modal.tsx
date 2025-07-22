@@ -17,7 +17,7 @@ export interface Grade {
     id: number;
     name: string;
   };
-   teacher: {
+  teacher: {
     id: number;
     user: { id: number; name: string };
   };
@@ -28,6 +28,7 @@ export interface Grade {
 }
 
 interface GradeFormData {
+  userId: number;
   subjectId: number;
   teacherId: number;
   semester: string;
@@ -69,7 +70,9 @@ export const GradeEditModal: React.FC<GradeEditModalProps> = ({ open, onClose, d
   };
 
   const handleSubmit = () => {
+      if (!data) return; 
     onSave({
+      userId: data.user.id,
       subjectId: Number(form.subjectId),
       teacherId: Number(form.teacherId),
       semester: form.semester,
