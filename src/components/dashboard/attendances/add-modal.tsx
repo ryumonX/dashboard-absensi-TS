@@ -57,7 +57,7 @@ export function AttendanceAddModal({ open, onClose, onSave }: AttendanceModalPro
     const fetchStudents = async () => {
       setIsLoading(true);
       try {
-        const res = await API.get('/user');
+        const res = await API.get('/attendances/students');
         const data = Array.isArray(res.data) ? res.data : (res.data as ApiResponse).data || [];
         const filtered = data.filter((user: ApiUser) => user.role === 'student');
         setStudentList(filtered);
