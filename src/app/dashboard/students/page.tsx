@@ -48,6 +48,7 @@ interface User {
 export default function Page(): React.JSX.Element {
   const [students, setStudents] = useState<Student[]>([]);
   const [openModal, setOpenModal] = useState(false);
+  const [totalStudents, setTotalStudents] = useState(0);
   const [editStudent, setEditStudent] = useState<Student | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [openDetailModal, setOpenDetailModal] = useState(false);
@@ -59,22 +60,30 @@ export default function Page(): React.JSX.Element {
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
   // Ambil data dari API
-  const fetchStudents = async (): Promise<void> => {
+  const fetchStudents = async (pageNumber = 1, limit = 5): Promise<void> => {
     try {
-      const res = await API.get('/user');
-      const allUsers = res.data.data as User[];
+      const res = await API.get('/user', {
+        params: {
+          page: pageNumber,
+          limit,
+        },
+      });
 
+      const allUsers = res.data.data as User[];
       const onlyStudents = allUsers.filter((user: User) => user.role === 'student');
 
       setStudents(onlyStudents);
+      setTotalStudents(res.data.meta.total);
     } catch (error) {
       console.error('Error fetching students:', error);
     }
   };
 
+
   useEffect(() => {
-    fetchStudents();
-  }, []);
+    fetchStudents(page + 1, rowsPerPage);
+  }, [page, rowsPerPage]);
+
 
   // Hapus siswa
   const handleDelete = async (id: number): Promise<void> => {
@@ -102,12 +111,6 @@ export default function Page(): React.JSX.Element {
     setOpenDetailModal(true);
   };
 
-  // Pagination
-  const paginatedStudents = students.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
-
   return (
     <Stack spacing={3}>
       <Stack direction="row" spacing={3}>
@@ -134,7 +137,7 @@ export default function Page(): React.JSX.Element {
 
       {/* Table siswa */}
       <StudentsTable
-        rows={paginatedStudents}
+        rows={students}
         count={students.length}
         page={page}
         rowsPerPage={rowsPerPage}
