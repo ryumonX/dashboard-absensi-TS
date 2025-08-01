@@ -138,7 +138,7 @@ export default function Page(): React.JSX.Element {
       {/* Table siswa */}
       <StudentsTable
         rows={students}
-        count={students.length}
+        count={totalStudents}
         page={page}
         rowsPerPage={rowsPerPage}
         onPageChange={(newPage) => setPage(newPage)}
