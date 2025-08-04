@@ -62,7 +62,7 @@ export default function Page(): React.JSX.Element {
   // Ambil data dari API
   const fetchStudents = async (pageNumber = 1, limit = 5): Promise<void> => {
     try {
-      const res = await API.get('/user', {
+      const res = await API.get('/user/students', {
         params: {
           page: pageNumber,
           limit,
